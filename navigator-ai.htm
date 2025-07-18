@@ -846,40 +846,42 @@
             }
         }
 
-        /**
-         * Funzione generica per chiamare l'API di Gemini.
-         */
-        async function callGemini(prompt) {
-            aiLoading.classList.remove('hidden');
-            aiOutput.classList.add('hidden');
-            aiError.textContent = '';
+       
 
-            try {
-                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-                const apiKey = ""; // Lasciare vuoto
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
 
-                if (!response.ok) throw new Error(`Errore di rete: ${response.status}`);
-                const result = await response.json();
+        async function callHuggingFace(prompt) {
+    aiLoading.classList.remove('hidden');
+    aiOutput.classList.add('hidden');
+    aiError.textContent = '';
 
-                if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
-                    aiOutput.textContent = result.candidates[0].content.parts[0].text;
-                    aiOutput.classList.remove('hidden');
-                } else {
-                    throw new Error("La risposta dell'AI non è nel formato atteso.");
-                }
-            } catch (error) {
-                aiError.textContent = `Errore dell'assistente AI: ${error.message}`;
-            } finally {
-                aiLoading.classList.add('hidden');
-            }
+    try {
+        const HF_TOKEN = "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";
+        const apiUrl = "https://api-inference.huggingface.co/models/gpt2"; // Puoi cambiare modello
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${HF_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({inputs: prompt})
+        });
+
+        if (!response.ok) throw new Error(`Errore di rete: ${response.status}`);
+        const result = await response.json();
+
+        if (result && result[0]?.generated_text) {
+            aiOutput.textContent = result[0].generated_text;
+            aiOutput.classList.remove('hidden');
+        } else {
+            throw new Error("La risposta dell'AI non è nel formato atteso.");
         }
+    } catch (error) {
+        aiError.textContent = `Errore dell'assistente AI: ${error.message}`;
+    } finally {
+        aiLoading.classList.add('hidden');
+    }
+}
 
         // --- EVENT LISTENERS ---
 
@@ -903,7 +905,8 @@
 2. Una specialità culinaria locale da non perdere.
 3. Una curiosità o una leggenda interessante legata al posto.
 Rispondi in modo conciso e in formato testuale.`;
-            callGemini(prompt);
+            */ callGemini(prompt);/
+              callHuggingFace(prompt);                          
         });
 
         planStageBtn.addEventListener('click', () => {
@@ -917,7 +920,7 @@ Crea un breve piano per la tappa in italiano, strutturato in questo modo:
 3. **Consiglio Pratico:** Offri un suggerimento utile per questa specifica tappa (es. acqua, cibo, orari).
 4. **Pensiero del Giorno:** Concludi con una breve frase motivazionale per il cammino.
 Rispondi in modo chiaro e schematico.`;
-            callGemini(prompt);
+callHuggingFace(prompt);
         });
         
         // Inizializzazione al caricamento della pagina
