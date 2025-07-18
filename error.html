@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagina Disastrata</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Stelle animate per sfondo */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                       radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+                       radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                       radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                       radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 3s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes sparkle {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-100px); }
+        }
+
+        /* Titolo più leggibile */
+        .ascii-title {
+            color: #00ff41;
+            font-size: clamp(16px, 4vw, 32px);
+            font-weight: bold;
+            text-align: center;
+            margin: 30px 10px;
+            text-shadow: 2px 2px 0px #000, 0 0 20px #00ff41;
+            animation: glow 2s ease-in-out infinite alternate;
+            letter-spacing: 2px;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 2px 2px 0px #000, 0 0 20px #00ff41; }
+            to { text-shadow: 2px 2px 0px #000, 0 0 30px #00ff41, 0 0 40px #00ff41; }
+        }
+
+        /* Container del coniglio */
+        .rabbit-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 20px;
+            animation: bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Coniglio più realistico */
+        .rabbit {
+            color: #ffffff;
+            font-size: clamp(10px, 2vw, 18px);
+            font-weight: bold;
+            text-align: center;
+            line-height: 1;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 0px #333;
+            white-space: pre;
+            position: relative;
+        }
+
+        .rabbit::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+            50% { transform: translateX(-50%) scale(1.2); opacity: 0.8; }
+            100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+        }
+
+        /* Carota e link più definiti */
+        .carrot-link {
+            text-decoration: none;
+            color: #ff6b35;
+            font-size: clamp(14px, 3vw, 20px);
+            font-weight: bold;
+            text-align: center;
+            margin: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        .carrot-link:hover {
+            color: #ff8c42;
+            transform: scale(1.1);
+            text-shadow: 0 0 15px #ff6b35;
+        }
+
+        .carrot-art {
+            color: #ff6b35;
+            font-size: clamp(12px, 2vw, 16px);
+            line-height: 1;
+            text-shadow: 2px 2px 0px #cc4a28;
+            margin-bottom: 15px;
+            animation: wiggle 2s ease-in-out infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        /* Particelle decorative */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: #00ff41;
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Responsive per iPhone */
+        @media (max-width: 480px) {
+            .ascii-title {
+                font-size: 18px;
+                margin: 20px 10px;
+                letter-spacing: 1px;
+            }
+            
+            .rabbit {
+                font-size: 12px;
+            }
+            
+            .carrot-art {
+                font-size: 14px;
+            }
+            
+            .carrot-link {
+                font-size: 16px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ascii-title">
+        PAGINA DISASTRATA
+    </div>
+
+    <div class="rabbit-container">
+        <div class="rabbit">
+           /|     /|
+          ( :v: )
+           |(_)|
+    ╔═════════════════════╗
+    ║     ██ VEST ██      ║
+    ║    ██       ██     ║
+    ║   ██  █████  ██    ║
+    ║  ██   █████   ██   ║
+    ║ ██    █████    ██  ║
+    ║██     █████     ██ ║
+    ╚═══════════════════╝
+        ██         ██
+       ████       ████
+      ██████     ██████
+     ████████   ████████
+    ██████████ ██████████
+   ████████████████████
+  ██████████████████████
+ ████████████████████████
+██████████████████████████
+██████████████████████████
+ ████████████████████████
+  ██████████████████████
+   ████████████████████
+    ██████████████████
+     ████████████████
+      ██████████████
+       ████████████
+        ██████████
+         ████████
+          ██████
+           ████
+            ██
+        </div>
+    </div>
+
+    <a href="index.html" class="carrot-link">
+        <div class="carrot-art">
+       ████
+      ██████
+     ████████
+    ██████████
+   ████████████
+  ██████████████
+ ████████████████
+██████████████████
+█████CARROT████████
+██████████████████
+ ████████████████
+  ██████████████
+   ████████████
+    ██████████
+     ████████
+      ██████
+       ████
+        ██
+         █
+        </div>
+        🡐 TORNA ALLA HOME 🡐
+    </div>
+
+    <script>
+        // Crea particelle animate
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                particle.remove();
+            }, 6000);
+        }
+
+        // Crea particelle ogni 500ms
+        setInterval(createParticle, 500);
+
+        // Aggiungi effetto sonoro al click (simulato visivamente)
+        document.querySelector('.carrot-link').addEventListener('click', function(e) {
+            this.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1.1)';
+            }, 100);
+        });
+
+        // Effetto glitch casuale sul titolo
+        const title = document.querySelector('.ascii-title');
+        setInterval(() => {
+            if (Math.random() < 0.05) {
+                title.style.textShadow = '2px 0 red, -2px 0 cyan';
+                title.style.transform = 'translateX(2px)';
+                setTimeout(() => {
+                    title.style.textShadow = '2px 2px 0px #000, 0 0 20px #00ff41';
+                    title.style.transform = 'translateX(0)';
+                }, 100);
+            }
+        }, 100);
+    </script>
+</body>
+</html>
