@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigatore Camino del Norte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Palette: Brilliant Blues */
+        :root {
+            --color-dark-blue: #004AAD;
+            --color-medium-blue: #0094D1;
+            --color-light-blue: #9BD3DD;
+            --color-text: #333333;
+            --color-background: #F5F5F5;
+            --color-card-background: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+        }
+        .header-bg {
+            background-color: var(--color-dark-blue);
+        }
+        .text-primary {
+            color: var(--color-dark-blue);
+        }
+        .text-secondary {
+            color: var(--color-medium-blue);
+        }
+        .btn-primary {
+            background-color: var(--color-medium-blue);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #007bb5; /* Slightly darker medium blue */
+        }
+        .card {
+            background-color: var(--color-card-background);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--color-medium-blue);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .albergue-item {
+            border-left: 4px solid var(--color-light-blue);
+            padding-left: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .albergue-item.cheapest {
+            border-left-color: var(--color-dark-blue);
+            font-weight: bold;
+        }
+        .albergue-item.tent-friendly {
+            border-right: 4px solid var(--color-dark-blue);
+            padding-right: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <header class="header-bg shadow-md">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <h1 class="text-4xl font-black text-white">Camino del Norte Navigator</h1>
+            <p class="text-xl mt-2 text-white">La tua guida in tempo reale sul percorso</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <section id="location-section" class="card text-center">
+            <h2 class="text-2xl font-bold mb-4 text-primary">La Tua Posizione Attuale</h2>
+            <p class="mb-4 text-gray-700">Clicca sul pulsante per rilevare la tua posizione sul Camino.</p>
+            <button id="getLocationBtn" class="btn-primary">Rileva la Mia Posizione</button>
+            <div id="loading" class="loading-spinner mt-6 hidden"></div>
+            <div id="locationOutput" class="mt-6 text-lg font-medium"></div>
+            
+            <div class="mt-8 pt-4 border-t border-gray-200">
+                <h3 class="text-xl font-bold mb-3 text-primary">O Inserisci la Posizione Manualmente</h3>
+                <input type="text" id="manualTownInput" placeholder="Es: San Sebastián" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="searchTownBtn" class="btn-primary mt-4">Cerca Paese</button>
+                <div id="manualErrorOutput" class="mt-4 text-red-600 font-semibold"></div>
+            </div>
+            <div id="errorOutput" class="mt-4 text-red-600 font-semibold"></div>
+        </section>
+
+        <section id="amenities-section" class="card hidden">
+            <h2 class="text-2xl font-bold mb-4 text-primary">Servizi Nelle Vicinanze</h2>
+            <div id="amenitiesOutput" class="text-gray-700"></div>
+        </section>
+
+        <section id="albergues-section" class="card hidden">
+            <h2 class="text-2xl font-bold mb-4 text-primary">Albergue in Zona</h2>
+            <div id="alberguesOutput" class="text-gray-700"></div>
+        </section>
+
+        <section id="ai-advice-section" class="card hidden">
+            <h2 class="text-2xl font-bold mb-4 text-primary">Consiglio del Giorno ✨</h2>
+            <button id="getAiAdviceBtn" class="btn-primary mb-4">Ottieni un Consiglio AI</button>
+            <div id="aiAdviceLoading" class="loading-spinner mt-6 hidden"></div>
+            <div id="aiAdviceOutput" class="text-gray-700"></div>
+            <div id="aiAdviceError" class="mt-4 text-red-600 font-semibold"></div>
+        </section>
+
+        <section id="next-town-details-section" class="card hidden">
+            <h2 class="text-2xl font-bold mb-4 text-primary">Dettagli Prossima Località</h2>
+            <div id="nextTownDetailsOutput" class="text-gray-700"></div>
+        </section>
+
+        <section id="advice-section" class="card hidden">
+            <h2 class="text-2xl font-bold mb-4 text-primary">Consigli per il Percorso</h2>
+            <div id="adviceOutput" class="text-gray-700"></div>
+        </section>
+    </main>
+
+    <footer class="bg-white mt-12 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>¡Buen Camino!</p>
+            <p class="text-sm mt-2">Dati simulati e basati su informazioni disponibili. Verifica sempre le informazioni sul posto.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dati completi per le località del Camino del Norte, inclusi albergue dettagliati, servizi e prossime tappe.
+        // I prezzi per gli albergue "Donativo" sono indicativi (es. 5€) se non specificato un minimo.
+        // La disponibilità di negozi, supermercati e fontanelle è basata sulle informazioni fornite e sulla dimensione della località.
+        // "tentAllowed" indica se l'albergue offre spazio per tende nel giardino o aree campeggio.
+        const caminoData = [
+            {
+                name: "Irun", lat: 43.3408, lon: -1.7891,
+                albergues: [
+                    { name: "Albergue de Peregrinos Jakobi", type: "Pubblico/Associazione", price: 5, address: "C. Lesaka, 1", beds: 60, contact: "N/A", services: ["Cucina", "Lavanderia", "Wi-Fi", "Giardino"], tentAllowed: false },
+                    { name: "Albergue Juvenil Martindozenea", type: "Privato", price: 20, address: "Avenida Elizatxo, 18", beds: 60, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Pensión Bowling", type: "Privato", price: 25, address: "C. Mourlane Michelena, 2", beds: 80, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Varie nel centro città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. Anaka, 11", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Carrefour Express", address: "C. Colón, 10", hours: "Lun-Sab: 09:00-21:00, Dom: 10:00-14:00", closingDays: "Nessuno (Domenica orario ridotto)" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza San Juan", address: "Plaza San Juan" }],
+                    campingShops: [{ name: "Decathlon Irun", address: "Centro Comercial Txingudi, Barrio Ventas", hours: "Lun-Sab: 10:00-21:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Ogi Berri", address: "C. Mayor, 5", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Oliden", cost: 15, address: "Barrio Oliden, s/n (vicino a Hondarribia)" }],
+                nextTowns: [{ name: "San Sebastián", distance: 25 }, { name: "Pasajes de San Juan", distance: 6 }]
+            },
+            {
+                name: "Pasajes de San Juan", lat: 43.3280, lon: -1.9050,
+                albergues: [
+                    { name: "Albergue de Peregrinos Santa Ana", type: "Municipale", price: 20, address: "Donibane, 1", beds: 14, contact: "N/A", services: ["Docce", "Lavanderia"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Piccoli negozi locali" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Muelle", address: "Muelle de San Juan" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Donibane", address: "C. Donibane, 10", hours: "Lun-Sab: 08:00-14:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "San Sebastián", distance: 6 }]
+            },
+            {
+                name: "San Sebastián", lat: 43.3183, lon: -1.9812,
+                albergues: [
+                    { name: "Albergue Juvenil Ulía", type: "Privato", price: 15, address: "P.o de Ulía, 297", beds: 62, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Juvenil Ondarreta - La Sirena", type: "Privato", price: 16, address: "P.o de Igeldo, 25", beds: 102, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Downtown River Hostel", type: "Privato", price: 20, address: "C. San Martin, 2", beds: 23, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Hostel A Room in the City", type: "Privato", price: 18, address: "C. Easo, 20", beds: 25, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Koba Hostel", type: "Privato", price: 21, address: "C. Karkizano, 5", beds: 22, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue de Peregrinos Claret Ikastola", type: "Municipale", price: 8, address: "Av. de Navarra, 1", beds: 0, contact: "N/A", services: [], tentAllowed: false } // Chiuso a luglio e agosto
+                ],
+                amenities: {
+                    shops: { available: true, address: "Ampia scelta nel centro città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. Urbieta, 16", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Super Amara", address: "Av. de la Libertad, 25", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" },
+                        { name: "Dia Market", address: "C. San Bartolomé, 1", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Parte Vieja", address: "Plaza de la Constitución" }, { name: "Fontanella La Concha", address: "Paseo de La Concha" }],
+                    campingShops: [{ name: "Forum Sport", address: "Centro Comercial Garbera", hours: "Lun-Sab: 10:00-22:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Pastelería Oiartzun", address: "C. Mayor, 2", hours: "Lun-Sab: 08:00-20:30, Dom: 09:00-14:00", closingDays: "Nessuno (Domenica orario ridotto)" }]
+                },
+                campsites: [{ name: "Camping Igueldo", cost: 20, address: "Paseo del Faro, 134" }],
+                nextTowns: [{ name: "Zarautz", distance: 22 }, { name: "Orio", distance: 15 }]
+            },
+            {
+                name: "Orio", lat: 43.2847, lon: -2.1648,
+                albergues: [
+                    { name: "Albergue San Martin", type: "Privato", price: 12, address: "Camino de la Ermita, s/n", beds: 20, contact: "N/A", services: ["Cucina", "Lavatrice", "Giardino"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Eroski City", address: "C. Nagusia, 30", hours: "Lun-Sab: 09:00-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Centro", address: "Plaza del Pueblo" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Orio", address: "C. Nagusia, 10", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Zarautz", distance: 5 }]
+            },
+            {
+                name: "Zarautz", lat: 43.2847, lon: -2.1648,
+                albergues: [
+                    { name: "Albergue de Peregrinos Ebro-Extea", type: "Associazione", price: 8, address: "C. Zumalakarregui, 16", beds: 0, contact: "N/A", services: [], tentAllowed: false }, // Apertura: Luglio e agosto.
+                    { name: "Zarautz Hostel", type: "Privato", price: 25, address: "Avenida Gipuzkoa, 59", beds: 0, contact: "N/A", services: ["Cucina", "Terrazza", "Wi-Fi"], tentAllowed: false },
+                    { name: "Galerna, Blai Blai Hostel", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Varie nel centro" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. Nafarroa, 10", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Dia Market", address: "C. Salegi, 5", hours: "Lun-Sab: 09:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Malecón", address: "Paseo Marítimo" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Pastelería Tolosa", address: "C. Kale Nagusia, 30", hours: "Lun-Sab: 08:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Zarautz", cost: 18, address: "N/A (vicino alla spiaggia)" }],
+                nextTowns: [{ name: "Getaria", distance: 5 }, { name: "Zumaia", distance: 10 }]
+            },
+            {
+                name: "Getaria", lat: 43.2828, lon: -2.2030,
+                albergues: [
+                    { name: "Albergue Txalupa Getaria", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Kanpaia", type: "Privato", price: 25, address: "Barrio Akarregi, 104 bajo", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Accessibile"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Getaria", address: "C. Nagusia, 15", hours: "Lun-Sab: 09:30-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Puerto", address: "Puerto de Getaria" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Getaria", address: "C. Aldamar, 5", hours: "Lun-Sab: 08:00-14:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Askizu", distance: 3 }, { name: "Zumaia", distance: 5 }]
+            },
+            {
+                name: "Askizu", lat: 43.2900, lon: -2.2300,
+                albergues: [
+                    { name: "Agote Aundi", type: "Privato", price: 20, address: "Barrio de Azkizu", beds: 0, contact: "N/A", services: ["Bar", "Pasti"], tentAllowed: false },
+                    { name: "Albergue Juvenil Askizu", type: "Pubblico", price: 8, address: "N/A", beds: 30, contact: "N/A", services: ["Cucina", "Sala multiuso"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Azkizu", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Zumaia", distance: 2 }]
+            },
+            {
+                name: "Zumaia", lat: 43.2989, lon: -2.2543,
+                albergues: [
+                    { name: "Albergue de Peregrinos Convento San José", type: "Associazione", price: 8, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }, // Apertura: Solo in estate
+                    { name: "Santa Klara", type: "Privato", price: 30, address: "C. Arritokieta, 2", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Vista panoramica"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Eroski City", address: "C. Eusebio Gurrutxaga, 1", hours: "Lun-Sab: 09:00-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Txomin Agirre", address: "Paseo Txomin Agirre" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Zumaia", address: "C. Erribera, 10", hours: "Lun-Sab: 07:00-19:30", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Deba", distance: 10 }]
+            },
+            {
+                name: "Deba", lat: 43.2989, lon: -2.3503,
+                albergues: [
+                    { name: "Albergue de Peregrinos Geltoki", type: "Associazione", price: 8, address: "Pl. Araquistain, 6", beds: 56, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "C. Hondartza, 10", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza Vieja", address: "Plaza Vieja" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Deba", address: "C. Hondartza, 5", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Ibiri", distance: 5 }, { name: "Markina-Xemein", distance: 24 }]
+            },
+            {
+                name: "Ibiri", lat: 43.2800, lon: -2.4000,
+                albergues: [
+                    { name: "Albergue Izarbide", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Ibiri", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Markina-Xemein", distance: 19 }]
+            },
+            {
+                name: "Markina-Xemein", lat: 43.2644, lon: -2.5029,
+                albergues: [
+                    { name: "Albergue de Peregrinos Convento Padres Carmelitas", type: "Associazione", price: 15, address: "Pl. Karmengo, 5", beds: 51, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Pitis", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Augusto", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Intxauspe", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Eroski City", address: "C. Zeharra, 12", hours: "Lun-Sab: 09:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Centro", address: "Plaza Xemein" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Markina", address: "C. Karmengo, 1", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Bolívar", distance: 5 }, { name: "Gernika-Lumo", distance: 25 }]
+            },
+            {
+                name: "Bolívar", lat: 43.2400, lon: -2.5500,
+                albergues: [
+                    { name: "Albergue Usandi", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Bolívar", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Zenarruza", distance: 3 }]
+            },
+            {
+                name: "Zenarruza", lat: 43.2200, lon: -2.5800,
+                albergues: [
+                    { name: "Monasterio de Zenarruza", type: "Pubblico", price: 8, address: "N/A", beds: 16, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue privado Ziortzabeitia", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Monasterio", address: "Presso il Monastero" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Munitibar", distance: 5 }]
+            },
+            {
+                name: "Munitibar", lat: 43.2600, lon: -2.6300,
+                albergues: [
+                    { name: "Albergue Lea", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Munitibar", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Mendata", distance: 5 }]
+            },
+            {
+                name: "Mendata", lat: 43.2800, lon: -2.6800,
+                albergues: [
+                    { name: "Albergue Andiketxe", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Mendata", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Gernika-Lumo", distance: 5 }]
+            },
+            {
+                name: "Gernika-Lumo", lat: 43.3180, lon: -2.6775,
+                albergues: [
+                    { name: "Albergue de Peregrinos", type: "Pubblico", price: 8, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Juvenil Gernika", type: "Pubblico", price: 8, address: "C. Kortezubi, 9", beds: 48, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue Pozueta", type: "Donativo", price: 5, address: "Pozueta Auzoa, 5", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Eskerika", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: ["Giardino"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Varie nel centro" },
+                    supermarkets: [
+                        { name: "Eroski Center", address: "C. Allende Salazar, 1", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Parque de los Pueblos de Europa", address: "Parque de los Pueblos de Europa" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Gernika", address: "C. Artekale, 10", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Larabetzu", distance: 10 }, { name: "Lezama", distance: 21 }]
+            },
+            {
+                name: "Larabetzu", lat: 43.2800, lon: -2.7500,
+                albergues: [
+                    { name: "Albergue de Peregrinos Larabetzu", type: "Pubblico", price: 8, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Larabetzu", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Lezama", distance: 5 }]
+            },
+            {
+                name: "Lezama", lat: 43.2840, lon: -2.8228,
+                albergues: [
+                    { name: "Albergue de Peregrinos Lezama", type: "Municipale", price: 5, address: "Barrio Garaioltza, 133-E", beds: 20, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Lezama", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Bilbao", distance: 11 }]
+            },
+            {
+                name: "Bilbao", lat: 43.2630, lon: -2.9349,
+                albergues: [
+                    { name: "Albergue de Peregrinos Santa Cruz de Begoña", type: "Parrocchiale", price: 5, address: "C. Padre Remigio Vilariño, 1", beds: 22, contact: "N/A", services: ["Microonde", "Frigorifero", "Deposito biciclette"], tentAllowed: false },
+                    { name: "All Iron Hostel", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Ganbara Hostel", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Quartier", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Bilbao Central Hostel", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Pil Pil Hostel", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Juvenil de Bilbao", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Akelarre Hostel", type: "Privato", price: 25, address: "C/ Iturribide, 1", beds: 30, contact: "+34 600112233", services: [], tentAllowed: false },
+                    { name: "Moon Hostel Bio", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "BBK", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "BCool Bilbao", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Ampia scelta in tutta la città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. Rekaldeberri, 30", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Eroski Center", address: "C. Autonomía, 50", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" },
+                        { name: "Carrefour Express", address: "C. Gran Vía, 25", hours: "Lun-Sab: 09:00-22:00, Dom: 10:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }
+                    ],
+                    fountains: [{ name: "Fontanella Casco Viejo", address: "Plaza Nueva" }, { name: "Fontanella Parque Doña Casilda", address: "Parque Doña Casilda Iturrizar" }],
+                    campingShops: [{ name: "Decathlon Bilbao", address: "C. Alameda de Rekalde, 30", hours: "Lun-Sab: 10:00-21:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Pastelería Martina de Zuricalday", address: "C. Ercilla, 10", hours: "Lun-Sab: 08:00-21:00, Dom: 09:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }]
+                },
+                campsites: [], // Nessun campeggio direttamente a Bilbao, ma nelle vicinanze.
+                nextTowns: [{ name: "Barakaldo", distance: 10 }, { name: "Portugalete", distance: 19 }]
+            },
+            {
+                name: "Barakaldo", lat: 43.2800, lon: -2.9900,
+                albergues: [
+                    { name: "Albergue de Peregrinos (Polideportivo Gorostiza)", type: "Pubblico", price: 8, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. La Florida, 1", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza de Cruces", address: "Plaza de Cruces" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Barakaldo", address: "C. Juan de Garay, 15", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Portugalete", distance: 5 }]
+            },
+            {
+                name: "Portugalete", lat: 43.3216, lon: -3.0210,
+                albergues: [
+                    { name: "Albergue de Peregrinos", type: "Municipale", price: 5, address: "Trasera del polideportivo Zubi Alde", beds: 30, contact: "N/A", services: ["Cucina", "Lavanderia", "Deposito biciclette", "Wi-Fi"], tentAllowed: false },
+                    { name: "Albergue Bide Ona", type: "Privato", price: 18, address: "N/A", beds: 34, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Eroski Center", address: "C. General Castaños, 10", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Puente Colgante", address: "Paseo de la Canilla" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Portugalete", address: "C. Coscojales, 5", hours: "Lun-Sab: 07:30-19:30", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Pobeña", distance: 10 }, { name: "Castro Urdiales", distance: 35 }]
+            },
+            {
+                name: "Pobeña", lat: 43.3400, lon: -3.1000,
+                albergues: [
+                    { name: "Albergue de Peregrinos", type: "Municipale", price: 8, address: "Barrio Pobeña", beds: 0, contact: "N/A", services: [], tentAllowed: false } // Apertura: Solo in estate
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Pobeña", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Castro Urdiales", distance: 25 }]
+            },
+            {
+                name: "Ontón", lat: 43.3600, lon: -3.1500,
+                albergues: [
+                    { name: "Albergue Tu Camino", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Ontón", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Castro Urdiales", distance: 20 }]
+            },
+            {
+                name: "Castro-Urdiales", lat: 43.3857, lon: -3.2229,
+                albergues: [
+                    { name: "Albergue de Peregrinos", type: "Municipale", price: 5, address: "N/A", beds: 16, contact: "N/A", services: ["Cucina"], tentAllowed: false },
+                    { name: "Albergue-Camping de Castro", type: "Privato", price: 20, address: "Barrio Campijo, 65", beds: 44, contact: "N/A", services: ["Bar-ristorante", "Lavatrice", "Piscina", "Deposito biciclette", "Wi-Fi"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Varie nel centro" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. La Ronda, 50", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Parque Amestoy", address: "Parque Amestoy" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Castro", address: "C. Ardigales, 10", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Playa de Oriñón", cost: 15, address: "Barrio Oriñón, s/n (vicino a Castro Urdiales)" }],
+                nextTowns: [{ name: "Islares", distance: 10 }, { name: "Laredo", distance: 30 }]
+            },
+            {
+                name: "Islares", lat: 43.4000, lon: -3.3000,
+                albergues: [
+                    { name: "Albergue de Peregrinos", type: "Pubblico", price: 5, address: "Antiguo consultorio, en la calle Escuela", beds: 18, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Islares", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Liendo", distance: 5 }]
+            },
+            {
+                name: "Liendo", lat: 43.4000, lon: -3.3500,
+                albergues: [
+                    { name: "Albergue de Peregrinos Saturnino Candina", type: "Pubblico", price: 8, address: "Barrio Hazas", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Liendo", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Laredo", distance: 5 }]
+            },
+            {
+                name: "Laredo", lat: 43.4079, lon: -3.4149,
+                albergues: [
+                    { name: "Albergue Casa Loopez", type: "Privato", price: 18, address: "C. Fuente Fresnedo, 1", beds: 8, contact: "N/A", services: ["Cucina", "Lavatrice"], tentAllowed: false },
+                    { name: "Albergue-Residencia Casa de la Trinidad", type: "Convento", price: 10, address: "C. San Francisco, 22-24", beds: 42, contact: "N/A", services: ["Cena comunitaria", "Colazione", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Varie nel centro" },
+                    supermarkets: [
+                        { name: "Lupa", address: "Av. de Cantabria, 1", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Alameda", address: "Alameda Miramar" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Laredo", address: "C. Comandante Villar, 1", hours: "Lun-Sab: 07:30-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Laredo", cost: 18, address: "Av. de Francia, 1" }],
+                nextTowns: [{ name: "Güemes", distance: 29 }, { name: "Santoña", distance: 5 }]
+            },
+            {
+                name: "Güemes", lat: 43.4395, lon: -3.6190,
+                albergues: [
+                    { name: "Albergue La Cabaña del Abuelo Peuto", type: "Donativo", price: 5, address: "Barrio de Gargollo, s/n", beds: 70, contact: "+34 942505050", services: ["Cena comunitaria", "Colazione", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Albergue", address: "Presso l'albergue" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Santander", distance: 12 }, { name: "Somo", distance: 8 }]
+            },
+            {
+                name: "Santander", lat: 43.4623, lon: -3.8099,
+                albergues: [
+                    { name: "Albergue de peregrinos Santos Mártires", type: "Privato", price: 15, address: "C. Ruamayor, 7, 1º", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Santander Central Hostel", type: "Privato", price: 19, address: "C. Calderón de la Barca, 4, entlo.", beds: 0, contact: "N/A", services: ["Biblioteca", "Wi-Fi"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Ampia scelta in tutta la città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. San Fernando, 50", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Lupa", address: "C. Vargas, 15", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Jardines de Pereda", address: "Jardines de Pereda" }],
+                    campingShops: [{ name: "Decathlon Santander", address: "C. Castilla, 30", hours: "Lun-Sab: 10:00-21:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Pastelería Zapatel", address: "C. Juan de Herrera, 10", hours: "Lun-Sab: 08:00-21:00, Dom: 09:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }]
+                },
+                campsites: [], // Nessun campeggio direttamente a Santander, ma nelle vicinanze.
+                nextTowns: [{ name: "Santillana del Mar", distance: 37 }, { name: "Boo de Piélagos", distance: 15 }]
+            },
+            {
+                name: "Santillana del Mar", lat: 43.3941, lon: -4.1065,
+                albergues: [
+                    { name: "Albergue El Convento", type: "Associazione", price: 15, address: "C. Antonio Niceas, 2", beds: 55, contact: "N/A", services: ["Cena comunitaria", "Colazione", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true },
+                    { name: "Albergue de peregrinos Jesús Otero", type: "Municipale", price: 8, address: "Pl. Abad Francisco Navarro, s/n", beds: 0, contact: "N/A", services: [], tentAllowed: false } // Chiuso
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Santillana", address: "C. del Cantón, 5", hours: "Lun-Sab: 09:30-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza Mayor", address: "Plaza Mayor" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Santillana", address: "C. Juan Infante, 1", hours: "Lun-Sab: 08:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Cóbreces", distance: 10 }, { name: "Comillas", distance: 22 }]
+            },
+            {
+                name: "Cóbreces", lat: 43.3800, lon: -4.2000,
+                albergues: [
+                    { name: "Monasterio Padres Cistercienses", type: "Convento", price: 8, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue privado “El Pino”", type: "Privato", price: 11, address: "C. El Pino, 1", beds: 12, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue privado “Viejo Lucas”", type: "Privato", price: 11, address: "Bº El Pino", beds: 99, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Cóbreces", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Comillas", distance: 5 }]
+            },
+            {
+                name: "Comillas", lat: 43.3857, lon: -4.2907,
+                albergues: [
+                    { name: "Albergue La Magia del Camino", type: "Privato", price: 21, address: "C. San Jerónimo, 30", beds: 27, contact: "N/A", services: ["Cucina", "Colazione", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Comillas", address: "C. Antonio López, 10", hours: "Lun-Sab: 09:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella El Capricho", address: "Giardini di El Capricho de Gaudí" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Comillas", address: "C. Marqués de Comillas, 5", hours: "Lun-Sab: 07:30-19:30", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Oyambre", cost: 18, address: "Carretera de Oyambre, s/n" }],
+                nextTowns: [{ name: "La Revilla", distance: 5 }, { name: "San Vicente de la Barquera", distance: 18 }]
+            },
+            {
+                name: "San Vicente de la Barquera", lat: 43.3949, lon: -4.3980,
+                albergues: [
+                    { name: "Sta. Mª de los Ángeles", type: "Pubblico", price: 8, address: "Accanto alla chiesa", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "Av. de los Soportales, 5", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Puerto", address: "Zona del porto" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería San Vicente", address: "C. La Barquera, 1", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping El Rosal", cost: 15, address: "Barrio El Rosal, s/n" }],
+                nextTowns: [{ name: "La Franca", distance: 10 }, { name: "Llanes", distance: 31 }]
+            },
+            {
+                name: "Colombres", lat: 43.3800, lon: -4.5300,
+                albergues: [
+                    { name: "Albergue Casa de Peregrinos Colombres", type: "Privato", price: 5, address: "C. La Serna, 1", beds: 9, contact: "N/A", services: ["Cucina", "Cena comunitaria", "Lavatrice", "Giardino"], tentAllowed: true },
+                    { name: "Albergue Juvenil El Cantu", type: "Privato", price: 15, address: "C. Lamadrid, s/n", beds: 130, contact: "N/A", services: ["Microonde", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Colombres", address: "C. Mayor, 20", hours: "Lun-Sab: 09:00-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Centro", address: "Piazza centrale" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Colombres", address: "C. La Serna, 5", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Buelna", distance: 5 }]
+            },
+            {
+                name: "Buelna", lat: 43.3800, lon: -4.6000,
+                albergues: [
+                    { name: "Alb.privado Sta.Marina", type: "Privato", price: 4, address: "N-634 km. 289", beds: 60, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Buelna", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Pendueles", distance: 5 }]
+            },
+            {
+                name: "Pendueles", lat: 43.3900, lon: -4.6500,
+                albergues: [
+                    { name: "Albergue privado “Aves de Paso”", type: "Privato", price: 5, address: "N/A", beds: 20, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Pendueles", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Llanes", distance: 5 }]
+            },
+            {
+                name: "Llanes", lat: 43.4214, lon: -4.7570,
+                albergues: [
+                    { name: "Albergue La Estación", type: "Privato", price: 17.50, address: "Estación de FEVE, s/n", beds: 34, contact: "N/A", services: ["Cucina", "Lavatrice"], tentAllowed: false },
+                    { name: "Albergue Juventudes de Llanes", type: "Pubblico/Governo", price: 16, address: "C. Celso Amieva, 7", beds: 70, contact: "N/A", services: ["Pasti", "Colazione", "Lavatrice", "Giardino"], tentAllowed: true },
+                    { name: "Albergues privado “La Casona”", type: "Privato", price: 5, address: "N/A", beds: 58, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergues de juventud (Portilla, Garaña, Estación)", type: "Pubblico", price: 8, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Varie nel centro" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "Av. de la Paz, 1", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Dia Market", address: "C. Mayor, 30", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza de la Magdalena", address: "Plaza de la Magdalena" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Pastelería La Palma", address: "C. Mayor, 1", hours: "Lun-Sab: 08:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Playa de Poo", cost: 15, address: "Playa de Poo, s/n" }],
+                nextTowns: [{ name: "Poo (Llanes)", distance: 3 }, { name: "Ribadesella", distance: 30 }]
+            },
+            {
+                name: "Poo (Llanes)", lat: 43.4200, lon: -4.8000,
+                albergues: [
+                    { name: "Albergue privado Playa de Poo", type: "Privato", price: 16, address: "N/A", beds: 24, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Poo", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Piñeres de Pría", distance: 5 }]
+            },
+            {
+                name: "Piñeres de Pría", lat: 43.4300, lon: -4.8500,
+                albergues: [
+                    { name: "Albergue La Llosa de Cosme", type: "Privato", price: 20, address: "N/A", beds: 8, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Piñeres", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Cuerres", distance: 5 }]
+            },
+            {
+                name: "Cuerres", lat: 43.4400, lon: -4.9000,
+                albergues: [
+                    { name: "Albergue privado “Reposo Andayon”", type: "Privato", price: 5, address: "N/A", beds: 10, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Cuerres", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Ribadesella", distance: 5 }]
+            },
+            {
+                name: "Ribadesella", lat: 43.4600, lon: -5.0680,
+                albergues: [
+                    { name: "Albergue juvenil Roberto Frassinelli", type: "Pubblico", price: 21, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue de peregrinos de San Esteban de Leces", type: "Pubblico", price: 15, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "C. Gran Vía, 1", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza de la Reina", address: "Plaza de la Reina" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Ribadesella", address: "C. Manuel Caso de la Villa, 10", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Ribadesella", cost: 18, address: "Playa de Santa Marina, s/n" }],
+                nextTowns: [{ name: "Duesos", distance: 5 }, { name: "Villaviciosa", distance: 29 }]
+            },
+            {
+                name: "Duesos", lat: 43.4700, lon: -5.1000,
+                albergues: [
+                    { name: "Albergue de peregrinos Duesos", type: "Pubblico", price: 5, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Duesos", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "La Isla (Colunga)", distance: 5 }]
+            },
+            {
+                name: "La Isla (Colunga)", lat: 43.4800, lon: -5.1500,
+                albergues: [
+                    { name: "Albergue de peregrinos de La Isla", type: "Pubblico", price: 8, address: "C. Les Quintanes, 10", beds: 22, contact: "N/A", services: [], tentAllowed: false } // Temporaneamente chiuso
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella La Isla", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Colunga", distance: 5 }]
+            },
+            {
+                name: "Colunga", lat: 43.4900, lon: -5.2000,
+                albergues: [
+                    { name: "Hostal El Mesón", type: "Privato", price: 30, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Colunga", address: "C. General Longoria, 1", hours: "Lun-Sab: 09:00-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Colunga", address: "Piazza del Comune" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Colunga", address: "C. Mayor, 1", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Villaviciosa", distance: 5 }]
+            },
+            {
+                name: "Villaviciosa", lat: 43.4816, lon: -5.4380,
+                albergues: [
+                    { name: "Albergue Villaviciosa", type: "Privato", price: 15, address: "C. Marqués de Villaviciosa, 5", beds: 0, contact: "N/A", services: ["Cucina", "Colazione", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue El Congreso", type: "Privato", price: 14, address: "Pl. del Ayuntamiento, 25", beds: 0, contact: "N/A", services: ["Cucina", "Colazione", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. Cervantes, 10", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza del Ayuntamiento", address: "Plaza del Ayuntamiento" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Villaviciosa", address: "C. General Campomanes, 1", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Gijón", distance: 29 }]
+            },
+            {
+                name: "Gijón", lat: 43.5353, lon: -5.6616,
+                albergues: [
+                    { name: "Albergue de peregrinos de Gijón", type: "Municipale", price: 6, address: "C. Camín de la Pasadiella, 85 (Camping Deva Gijón)", beds: 36, contact: "N/A", services: ["Lavatrice", "Wi-Fi"], tentAllowed: true },
+                    { name: "Residencia Universitaria Cimadevilla", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Ampia scelta in tutta la città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "Av. de la Constitución, 10", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Alimerka", address: "C. Corrida, 20", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Playa de San Lorenzo", address: "Paseo de San Lorenzo" }],
+                    campingShops: [{ name: "Decathlon Gijón", address: "Centro Comercial La Calzada", hours: "Lun-Sab: 10:00-22:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Panadería La Tahona", address: "C. Corrida, 5", hours: "Lun-Sab: 07:00-21:00, Dom: 08:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }]
+                },
+                campsites: [{ name: "Camping Deva Gijón", cost: 15, address: "C. Camín de la Pasadiella, 85" }],
+                nextTowns: [{ name: "Pola de Siero", distance: 15 }, { name: "Avilés", distance: 25 }]
+            },
+            {
+                name: "Pola de Siero", lat: 43.3900, lon: -5.5500,
+                albergues: [
+                    { name: "Albergue de peregrinos de Pola de Siero", type: "Municipale", price: 8, address: "C. Celleruelo, 57", beds: 30, contact: "N/A", services: ["Lavatrice", "Wi-Fi"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "C. Florez Estrada, 1", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Pola de Siero", address: "Piazza del mercato" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Pola", address: "C. Marques de Santa Cruz, 10", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Oviedo", distance: 15 }]
+            },
+            {
+                name: "Oviedo", lat: 43.3600, lon: -5.8500,
+                albergues: [
+                    { name: "Albergue de peregrinos de El Salvador", type: "Municipale", price: 7.50, address: "C. Leopoldo Alas, 20", beds: 51, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Ampia scelta in tutta la città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. General Elorza, 50", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Carrefour Express", address: "C. Uría, 10", hours: "Lun-Sab: 09:00-22:00, Dom: 10:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza de la Catedral", address: "Plaza de la Catedral" }],
+                    campingShops: [{ name: "Decathlon Oviedo", address: "Centro Comercial Los Prados", hours: "Lun-Sab: 10:00-22:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Pastelería Rialto", address: "C. San Francisco, 12", hours: "Lun-Sab: 08:00-21:00, Dom: 09:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Avilés", distance: 25 }]
+            },
+            {
+                name: "Avilés", lat: 43.5562, lon: -5.9220,
+                albergues: [
+                    { name: "Albergue de peregrinos Pedro Solís", type: "Municipale", price: 10, address: "C. de la Magdalena, 1", beds: 30, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Alimerka", address: "C. La Cámara, 1", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza de España", address: "Plaza de España" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Avilés", address: "C. La Ferrería, 10", hours: "Lun-Sab: 07:30-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Muros de Nalón", distance: 20 }, { name: "Soto de Luiña", distance: 39 }]
+            },
+            {
+                name: "Muros de Nalón", lat: 43.5500, lon: -6.0500,
+                albergues: [
+                    { name: "Albergue La Naranja Peregrina", type: "Privato", price: 18, address: "C. Era, 27", beds: 0, contact: "N/A", services: ["Cena comunitaria", "Colazione", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Casa Carmina Hostel", type: "Privato", price: 18, address: "Av. Riego, 21-23", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Giardino"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Muros", address: "C. La Plaza, 5", hours: "Lun-Sab: 09:30-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Muros", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Muros", address: "C. La Iglesia, 1", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Soto de Luiña", distance: 19 }]
+            },
+            {
+                name: "Soto de Luiña", lat: 43.5560, lon: -6.2160,
+                albergues: [
+                    { name: "Albergue de peregrinos de Soto de Luiña", type: "Municipale", price: 10, address: "N/A", beds: 10, contact: "N/A", services: ["Lavanderia"], tentAllowed: true }, // Possibilità di campeggio
+                    { name: "Albergue La Reguera", type: "Privato", price: 5, address: "El Cepedo, s/n", beds: 10, contact: "N/A", services: ["Cena comunitaria", "Colazione", "Lavatrice", "Giardino"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Soto", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Cadavedo", distance: 24 }]
+            },
+            {
+                name: "Cadavedo", lat: 43.5580, lon: -6.3700,
+                albergues: [
+                    { name: "Albergue de peregrinos de Cadavedo", type: "Municipale", price: 8, address: "C. La Iglesia, 1", beds: 12, contact: "N/A", services: ["Cucina", "Lavatoio"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Cadavedo", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Luarca", distance: 16 }]
+            },
+            {
+                name: "Luarca", lat: 43.5410, lon: -6.5380,
+                albergues: [
+                    { name: "Albergue Casa Lua", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "C. Uría, 10", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Puerto", address: "Zona del porto" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Luarca", address: "C. Pescadores, 1", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "La Caridad", distance: 28 }]
+            },
+            {
+                name: "La Caridad", lat: 43.5460, lon: -6.8400,
+                albergues: [
+                    { name: "Albergue de peregrinos de La Caridad", type: "Municipale", price: 10, address: "Av. de Asturias", beds: 30, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue La Xana", type: "Privato", price: 17, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado La Caridad", address: "Av. de Asturias, 5", hours: "Lun-Sab: 09:00-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella La Caridad", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería La Caridad", address: "Av. de Asturias, 1", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Tapia de Casariego", distance: 10 }, { name: "Tol (Castropol)", distance: 15 }, { name: "Ribadeo", distance: 22 }]
+            },
+            {
+                name: "Tapia de Casariego", lat: 43.5700, lon: -6.9000,
+                albergues: [
+                    { name: "Albergue de peregrinos de Tapia de Casariego", type: "Municipale", price: 7, address: "C. San Martín, 13", beds: 30, contact: "N/A", services: [], tentAllowed: false } // Temporaneamente chiuso
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Eroski City", address: "C. Ramón y Cajal, 1", hours: "Lun-Sab: 09:00-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Tapia", address: "Piazza del Comune" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Tapia", address: "C. San Martín, 5", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Ribadeo", distance: 12 }]
+            },
+            {
+                name: "Tol (Castropol)", lat: 43.5500, lon: -6.9500,
+                albergues: [
+                    { name: "Albergue de peregrinos de Tol", type: "Municipale", price: 5, address: "Ctra. AS-31, s/n", beds: 0, contact: "N/A", services: [], tentAllowed: false } // Temporaneamente chiuso
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Tol", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Figueras", distance: 5 }]
+            },
+            {
+                name: "Figueras", lat: 43.5400, lon: -7.0000,
+                albergues: [
+                    { name: "Albergue Camino Norte", type: "Privato", price: 16, address: "Rozadela, s/n", beds: 0, contact: "N/A", services: ["Bar-ristorante", "Lavatrice", "Giardino", "Deposito biciclette"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Figueras", address: "C. de la Iglesia, 1", hours: "Lun-Sab: 09:30-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Figueras", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Figueras", address: "C. del Puerto, 1", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Ribadeo", distance: 5 }]
+            },
+            {
+                name: "Vegadeo", lat: 43.4300, lon: -7.0500,
+                albergues: [
+                    { name: "Albergue de peregrinos Mar y Montaña", type: "Municipale", price: 12, address: "C. Milagrosa, 18", beds: 23, contact: "N/A", services: ["Cucina", "Bar/caffetteria", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "C. La Calzada, 10", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Vegadeo", address: "Piazza del Comune" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Vegadeo", address: "C. El Puente, 1", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Trabada", distance: 10 }]
+            },
+            {
+                name: "Trabada", lat: 43.3500, lon: -7.1500,
+                albergues: [
+                    { name: "Albergue privado, en A Trapa", type: "Privato", price: 20, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Trabada", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Ribadeo", distance: 15 }]
+            },
+            {
+                name: "Ribadeo", lat: 43.5360, lon: -7.0390,
+                albergues: [
+                    { name: "Albergue de peregrinos de Ribadeo", type: "Xunta", price: 10, address: "Ctra. de Faro, s/n", beds: 12, contact: "N/A", services: ["Cucina"], tentAllowed: false },
+                    { name: "Albergue Viruxe", type: "Privato", price: 12, address: "Camiño Veiga da Aira, 4", beds: 20, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue A Ponte", type: "Privato", price: 19, address: "N/A", beds: 28, contact: "N/A", services: ["Colazione"], tentAllowed: false },
+                    { name: "Albergue Río Eo", type: "Privato", price: 15, address: "N/A", beds: 28, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue El Olivo", type: "Privato", price: 12, address: "N/A", beds: 13, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Hostel Namor", type: "Privato", price: 25, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Gadis", address: "Av. de Galicia, 50", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" },
+                        { name: "Eroski City", address: "C. San Roque, 10", hours: "Lun-Sab: 09:00-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza de España", address: "Plaza de España" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Ribadeo", address: "C. Rodríguez Murias, 1", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [{ name: "Camping Isla Pancha", cost: 15, address: "Isla Pancha, s/n" }],
+                nextTowns: [{ name: "Gondán", distance: 10 }, { name: "Lourenzá", distance: 29 }]
+            },
+            {
+                name: "Gondán", lat: 43.4800, lon: -7.1500,
+                albergues: [
+                    { name: "Albergue de peregrinos de Gontán", type: "Xunta", price: 10, address: "Ctra. Labrada, s/n", beds: 26, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Gondán", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Mondoñedo", distance: 10 }]
+            },
+            {
+                name: "Mondoñedo", lat: 43.4300, lon: -7.3800,
+                albergues: [
+                    { name: "Albergue de peregrinos de Mondoñedo", type: "Xunta", price: 10, address: "Pl. de Jaime Cabot, s/n", beds: 28, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Lumen Albergue", type: "Privato", price: 21, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "C. Leiras, 5", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Catedral", address: "Plaza de la Catedral" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Mondoñedo", address: "C. Alfonso VII, 1", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Abadín", distance: 25 }]
+            },
+            {
+                name: "Lourenzá", lat: 43.4300, lon: -7.3800,
+                albergues: [
+                    { name: "Albergue de peregrinos de Lourenzá", type: "Pubblico", price: 8, address: "C. Do Convento, 1", beds: 25, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Supermercado Lourenzá", address: "C. Do Convento, 10", hours: "Lun-Sab: 09:00-14:00, 17:00-20:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Convento", address: "Presso il Convento" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Lourenzá", address: "C. Do Convento, 5", hours: "Lun-Sab: 07:30-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Abadín", distance: 25 }]
+            },
+            {
+                name: "Abadín", lat: 43.3500, lon: -7.5600,
+                albergues: [
+                    { name: "Albergue Xabarín", type: "Privato", price: 19, address: "Av. de Galicia, 28", beds: 42, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette", "Terrazza"], tentAllowed: false },
+                    { name: "Albergue Goás", type: "Privato", price: 17, address: "N/A", beds: 46, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Abadín", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Vilalba", distance: 21 }]
+            },
+            {
+                name: "Vilalba", lat: 43.2900, lon: -7.6800,
+                albergues: [
+                    { name: "Albergue de peregrinos de Vilalba", type: "Xunta", price: 10, address: "Polígono Industrial", beds: 42, contact: "N/A", services: ["Cucina", "Lavatrice", "Wi-Fi", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue As Pedreiras", type: "Privato", price: 15, address: "Rúa Pita da Veiga, 4", beds: 27, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true },
+                    { name: "Albergue Turístico Castelos", type: "Privato", price: 14, address: "Rua Pedreras", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Gadis", address: "Rúa da Pravia, 1", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Vilalba", address: "Piazza del Comune" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Vilalba", address: "Rúa da Pravia, 5", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Baamonde", distance: 20 }]
+            },
+            {
+                name: "Baamonde", lat: 43.2000, lon: -7.8300,
+                albergues: [
+                    { name: "Albergue de peregrinos de Baamonde", type: "Xunta", price: 10, address: "Ctra. Vilalba, 9", beds: 64, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette", "Giardino", "Wi-Fi"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Baamonde", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Miraz", distance: 15 }, { name: "Sobrado dos Monxes", distance: 28 }]
+            },
+            {
+                name: "Miraz", lat: 43.1000, lon: -7.9000,
+                albergues: [
+                    { name: "CSJ Albergue San Martín - Miraz", type: "Confraternity of Saint James", price: 5, address: "Corral da Fonte, s/n", beds: 20, contact: "N/A", services: ["Cucina", "Colazione", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue Ó Abrigo", type: "Privato", price: 18, address: "As Laxes, 32", beds: 0, contact: "N/A", services: ["Bar-ristorante", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Miraz", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Sobrado dos Monxes", distance: 13 }]
+            },
+            {
+                name: "Sobrado dos Monxes", lat: 43.0300, lon: -8.0200,
+                albergues: [
+                    { name: "Albergue de peregrinos del Monasterio de Sobrado dos Monxes", type: "Parrocchiale", price: 10, address: "Monasterio de Sobrado", beds: 120, contact: "N/A", services: ["Cucina", "Lavatoio", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue privado “Lecer”", type: "Privato", price: 20, address: "C/Casiñas", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Monasterio", address: "Presso il Monastero" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Boimorto", distance: 10 }, { name: "Arzúa", distance: 22 }]
+            },
+            {
+                name: "Boimorto", lat: 43.0000, lon: -8.1000,
+                albergues: [
+                    { name: "Albergue de peregrinos de Boimorto", type: "Municipale", price: 10, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue-Hostel Casa da Gándara", type: "Privato", price: 20, address: "Rúa Gándara, 49", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Boimorto", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Arzúa", distance: 12 }]
+            },
+            {
+                name: "Arzúa", lat: 42.9200, lon: -8.1700,
+                albergues: [
+                    { name: "Albergue de peregrinos de Arzúa", type: "Xunta", price: 10, address: "Rúa Cima do Lugar, 6", beds: 56, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true },
+                    { name: "Albergue Vía Láctea", type: "Privato", price: 15, address: "C/Xosé Neira Vilas, 26", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Wi-Fi", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Gadis", address: "Rúa Lugo, 5", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella Arzúa", address: "Piazza del Comune" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Arzúa", address: "Rúa Cima do Lugar, 1", hours: "Lun-Sab: 07:00-20:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "Santa Irene", distance: 10 }, { name: "O Pedrouzo", distance: 19 }]
+            },
+            {
+                name: "Santa Irene", lat: 42.9000, lon: -8.2700,
+                albergues: [
+                    { name: "Albergue de peregrinos de Santa Irene", type: "Xunta", price: 10, address: "Santa Irene, s/n", beds: 32, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue Santa Irene", type: "Privato", price: 18, address: "Santa Irene, s/n", beds: 15, contact: "N/A", services: ["Colazione", "Menu", "Lavatrice", "Deposito biciclette"], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: false, address: "N/A" },
+                    supermarkets: [],
+                    fountains: [{ name: "Fontanella Santa Irene", address: "Centro del paese" }],
+                    campingShops: [],
+                    bakeries: []
+                },
+                campsites: [],
+                nextTowns: [{ name: "Arca - O Pino (O Pedrouzo)", distance: 9 }]
+            },
+            {
+                name: "Arca - O Pino (O Pedrouzo)", lat: 42.8900, lon: -8.3700,
+                albergues: [
+                    { name: "Albergue de Peregrinos de Arca do Pino", type: "Xunta", price: 10, address: "Avda de Compostela, s/n", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Otero", type: "Privato", price: 16, address: "Rúa Forcarei, 2", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi locali" },
+                    supermarkets: [
+                        { name: "Dia Market", address: "Av. de Compostela, 10", hours: "Lun-Sab: 09:30-20:30", closingDays: "Dom" }
+                    ],
+                    fountains: [{ name: "Fontanella O Pedrouzo", address: "Av. de Compostela" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería O Pedrouzo", address: "Av. de Compostela, 5", hours: "Lun-Sab: 07:00-19:00", closingDays: "Dom" }]
+                },
+                campsites: [],
+                nextTowns: [{ name: "San Marcos (Monte do Gozo)", distance: 15 }, { name: "Santiago de Compostela", distance: 20 }]
+            },
+            {
+                name: "San Marcos (Monte do Gozo)", lat: 42.8800, lon: -8.4500,
+                albergues: [
+                    { name: "Albergue de peregrinos del Monte do Gozo", type: "Xunta", price: 10, address: "Rúa do Gozo, 18", beds: 620, contact: "N/A", services: ["Bar/caffetteria", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true },
+                    { name: "Albergue Monte do Gozo", type: "Privato", price: 14, address: "Rúa do Gozo, 18", beds: 620, contact: "N/A", services: ["Bar/caffetteria", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Negozi di souvenir e minimarket" },
+                    supermarkets: [
+                        { name: "Minimarket Monte do Gozo", address: "Rúa do Gozo, 18 (all'interno dell'area dell'albergue)", hours: "Lun-Dom: 08:00-21:00", closingDays: "Nessuno" }
+                    ],
+                    fountains: [{ name: "Fontanella Monte do Gozo", address: "Presso l'albergue" }],
+                    campingShops: [],
+                    bakeries: [{ name: "Panadería Monte do Gozo", address: "Rúa do Gozo, 18 (all'interno dell'area dell'albergue)", hours: "Lun-Dom: 08:00-20:00", closingDays: "Nessuno" }]
+                },
+                campsites: [{ name: "Camping Monte do Gozo", cost: 10, address: "Rúa do Gozo, 18" }],
+                nextTowns: [{ name: "Santiago de Compostela", distance: 4.2 }]
+            },
+            {
+                name: "Santiago de Compostela", lat: 42.8806, lon: -8.5448,
+                albergues: [
+                    { name: "Residencia de peregrinos San Lázaro", type: "Pubblico", price: 10, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Seminario Menor", type: "Privato", price: 19, address: "Rúa da Virxe da Cerca, 24", beds: 400, contact: "+34 981582200", services: [], tentAllowed: false },
+                    { name: "Albergue Fin del Camino", type: "Privato", price: 15, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Mundoalbergue", type: "Privato", price: 17, address: "Rúa San Clemente, 26", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette", "Giardino"], tentAllowed: true },
+                    { name: "Albergue The Last Stamp", type: "Privato", price: 22, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue La Estación", type: "Privato", price: 20, address: "Rúa Xoana Nogueira, 14", beds: 0, contact: "N/A", services: ["Cucina", "Lavatrice", "Deposito biciclette"], tentAllowed: false },
+                    { name: "Albergue Porta Real", type: "Privato", price: 18, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Azabache", type: "Privato", price: 18, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue La Credencial", type: "Privato", price: 18, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false },
+                    { name: "Albergue Monterrey", type: "Privato", price: 17, address: "N/A", beds: 0, contact: "N/A", services: [], tentAllowed: false }
+                ],
+                amenities: {
+                    shops: { available: true, address: "Ampia scelta in tutta la città" },
+                    supermarkets: [
+                        { name: "Mercadona", address: "C. de la Rosa, 10", hours: "Lun-Sab: 09:00-21:30", closingDays: "Dom" },
+                        { name: "Gadis", address: "Rúa do Hórreo, 50", hours: "Lun-Sab: 09:00-21:00", closingDays: "Dom" },
+                        { name: "Carrefour Express", address: "Rúa do Vilar, 1", hours: "Lun-Dom: 09:00-22:00", closingDays: "Nessuno" }
+                    ],
+                    fountains: [{ name: "Fontanella Plaza del Obradoiro", address: "Plaza del Obradoiro" }, { name: "Fontanella Alameda", address: "Parque de la Alameda" }],
+                    campingShops: [{ name: "Decathlon Santiago", address: "Centro Comercial As Cancelas", hours: "Lun-Sab: 10:00-22:00", closingDays: "Dom" }],
+                    bakeries: [{ name: "Obradoiro de Pan", address: "Rúa do Franco, 50", hours: "Lun-Sab: 07:00-21:00, Dom: 08:00-15:00", closingDays: "Nessuno (Domenica orario ridotto)" }]
+                },
+                campsites: [], // Nessun campeggio direttamente a Santiago, ma nelle vicinanze.
+                nextTowns: []
+            }
+        ];
+
+        let currentTown = null; // Variabile per tenere traccia della città corrente
+
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const loadingSpinner = document.getElementById('loading');
+        const locationOutput = document.getElementById('locationOutput');
+        const errorOutput = document.getElementById('errorOutput');
+        const amenitiesSection = document.getElementById('amenities-section');
+        const amenitiesOutput = document.getElementById('amenitiesOutput');
+        const alberguesSection = document.getElementById('albergues-section');
+        const alberguesOutput = document.getElementById('alberguesOutput');
+        const aiAdviceSection = document.getElementById('ai-advice-section');
+        const getAiAdviceBtn = document.getElementById('getAiAdviceBtn');
+        const aiAdviceLoading = document.getElementById('aiAdviceLoading');
+        const aiAdviceOutput = document.getElementById('aiAdviceOutput');
+        const aiAdviceError = document.getElementById('aiAdviceError');
+        const nextTownDetailsSection = document.getElementById('next-town-details-section');
+        const nextTownDetailsOutput = document.getElementById('nextTownDetailsOutput');
+        const adviceSection = document.getElementById('advice-section');
+        const adviceOutput = document.getElementById('adviceOutput');
+        const manualTownInput = document.getElementById('manualTownInput');
+        const searchTownBtn = document.getElementById('searchTownBtn');
+        const manualErrorOutput = document.getElementById('manualErrorOutput');
+
+
+        // Funzione per calcolare la distanza euclidea (approssimazione)
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Raggio della Terra in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+            return distance;
+        }
+
+        function showPosition(position) {
+            loadingSpinner.classList.add('hidden');
+            manualErrorOutput.textContent = ''; // Clear manual error
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+
+            locationOutput.innerHTML = `
+                <p>Sei a:</p>
+                <p class="font-bold text-primary">${userLat.toFixed(4)}, ${userLon.toFixed(4)}</p>
+            `;
+
+            let closestTown = null;
+            let minDistance = Infinity;
+
+            caminoData.forEach(town => {
+                const distance = getDistance(userLat, userLon, town.lat, town.lon);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestTown = town;
+                }
+            });
+
+            if (closestTown) {
+                currentTown = closestTown; // Set current town for AI advice
+                locationOutput.innerHTML += `<p class="mt-2">Sei vicino a <span class="font-bold text-secondary">${closestTown.name}</span> (circa ${minDistance.toFixed(2)} km).</p>`;
+                displayTownInfo(closestTown);
+            } else {
+                currentTown = null; // Reset current town
+                locationOutput.innerHTML += `<p class="mt-2 text-red-600">Non riusciamo a determinare la tua posizione sul Camino del Norte con i dati disponibili.</p>`;
+                hideAllSections();
+            }
+        }
+
+        function showError(error) {
+            loadingSpinner.classList.add('hidden');
+            let errorMessage = "Errore nel rilevamento della posizione.";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = "Permesso negato: Per favor, abilita la geolocalizzazione.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = "Posizione non disponibile: Impossibile rilevare la tua posizione.";
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = "Timeout: Il rilevamento della posizione ha impiegato troppo tempo.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    errorMessage = "Errore sconosciuto.";
+                    break;
+            }
+            errorOutput.textContent = errorMessage;
+            hideAllSections();
+        }
+
+        function hideAllSections() {
+            amenitiesSection.classList.add('hidden');
+            alberguesSection.classList.add('hidden');
+            aiAdviceSection.classList.add('hidden');
+            nextTownDetailsSection.classList.add('hidden');
+            adviceSection.classList.add('hidden');
+            aiAdviceOutput.textContent = ''; // Clear previous AI advice
+            aiAdviceError.textContent = ''; // Clear previous AI error
+        }
+
+        function displayTownInfo(town) {
+            // Mostra la sezione servizi
+            amenitiesSection.classList.remove('hidden');
+            let amenitiesHtml = `
+                <p class="mb-2"><strong>Negozi Generici:</strong> ${town.amenities.shops.available ? 'Disponibili' + (town.amenities.shops.address !== "N/A" ? ' (' + town.amenities.shops.address + ')' : '') : 'Non disponibili'}</p>
+                
+                <p class="mb-2 mt-4 font-semibold">Supermercati:</p>
+            `;
+            if (town.amenities.supermarkets.length > 0) {
+                amenitiesHtml += `<ul>`;
+                town.amenities.supermarkets.forEach(supermarket => {
+                    amenitiesHtml += `<li class="ml-4 list-disc">
+                        ${supermarket.name} - ${supermarket.address} <br>
+                        Orari: ${supermarket.hours} <br>
+                        Chiuso: ${supermarket.closingDays}
+                    </li>`;
+                });
+                amenitiesHtml += `</ul>`;
+            } else {
+                amenitiesHtml += `<p class="ml-4">Non disponibili o dettagli non specificati.</p>`;
+            }
+
+            amenitiesHtml += `
+                <p class="mb-2 mt-4 font-semibold">Negozi Articoli da Campeggio/Sportivi:</p>
+            `;
+            if (town.amenities.campingShops.length > 0) {
+                amenitiesHtml += `<ul>`;
+                town.amenities.campingShops.forEach(shop => {
+                    amenitiesHtml += `<li class="ml-4 list-disc">
+                        ${shop.name} - ${shop.address} <br>
+                        Orari: ${shop.hours} <br>
+                        Chiuso: ${shop.closingDays || 'Nessuno'}
+                    </li>`;
+                });
+                amenitiesHtml += `</ul>`;
+            } else {
+                amenitiesHtml += `<p class="ml-4">Non disponibili o dettagli non specificati.</p>`;
+            }
+
+            amenitiesHtml += `
+                <p class="mb-2 mt-4 font-semibold">Panetterie/Pasticcerie:</p>
+            `;
+            if (town.amenities.bakeries.length > 0) {
+                amenitiesHtml += `<ul>`;
+                town.amenities.bakeries.forEach(bakery => {
+                    amenitiesHtml += `<li class="ml-4 list-disc">
+                        ${bakery.name} - ${bakery.address} <br>
+                        Orari: ${bakery.hours} <br>
+                        Chiuso: ${bakery.closingDays || 'Nessuno'}
+                    </li>`;
+                });
+                amenitiesHtml += `</ul>`;
+            } else {
+                amenitiesHtml += `<p class="ml-4">Non disponibili o dettagli non specificati.</p>`;
+            }
+
+            amenitiesHtml += `
+                <p class="mb-2 mt-4 font-semibold">Fontanelle:</p>
+            `;
+            if (town.amenities.fountains.length > 0) {
+                amenitiesHtml += `<ul>`;
+                town.amenities.fountains.forEach(fountain => {
+                    amenitiesHtml += `<li class="ml-4 list-disc">
+                        ${fountain.name} - ${fountain.address}
+                    </li>`;
+                });
+                amenitiesHtml += `</ul>`;
+            } else {
+                amenitiesHtml += `<p class="ml-4">Non disponibili o indirizzi non specificati.</p>`;
+            }
+
+            amenitiesOutput.innerHTML = amenitiesHtml;
+
+            // Mostra la sezione albergue
+            alberguesSection.classList.remove('hidden');
+            if (town.albergues && town.albergues.length > 0) {
+                town.albergues.sort((a, b) => a.price - b.price); // Ordina per prezzo
+                let alberguesHtml = '<p class="mb-2">Ecco gli albergue a ' + town.name + ' (ordinati per prezzo):</p>';
+                town.albergues.forEach((alb, index) => {
+                    const isCheapest = index === 0;
+                    const hasTentSpace = alb.tentAllowed ? ' <span class="text-secondary">(Spazio per tenda)</span>' : '';
+                    alberguesHtml += `
+                        <div class="albergue-item ${isCheapest ? 'cheapest' : ''} ${alb.tentAllowed ? 'tent-friendly' : ''}">
+                            <p class="font-semibold">${alb.name} (${alb.type})</p>
+                            <p>Prezzo: €${alb.price}${hasTentSpace}</p>
+                            <p>Indirizzo: ${alb.address}</p>
+                            <p>Letti: ${alb.beds !== 0 ? alb.beds : 'N/A'}</p>
+                            <p>Servizi: ${alb.services.length > 0 ? alb.services.join(', ') : 'N/A'}</p>
+                        </div>
+                    `;
+                });
+                alberguesOutput.innerHTML = alberguesHtml;
+            } else {
+                alberguesOutput.innerHTML = '<p>Nessun albergue conosciuto in questa località.</p>';
+            }
+
+            // Mostra i campeggi
+            if (town.campsites && town.campsites.length > 0) {
+                let campsitesHtml = '<p class="mb-2 mt-4 font-semibold">Campeggi in zona:</p><ul>';
+                town.campsites.forEach(camp => {
+                    campsitesHtml += `<li class="ml-4 list-disc">
+                        ${camp.name} - ${camp.address} <br>
+                        Costo stimato: €${camp.cost}
+                    </li>`;
+                });
+                campsitesHtml += `</ul>`;
+                alberguesOutput.innerHTML += campsitesHtml; // Aggiungi alla sezione albergue per ora
+            }
+
+            // Mostra la sezione AI Advice
+            aiAdviceSection.classList.remove('hidden');
+
+            // Mostra la sezione consigli
+            adviceSection.classList.remove('hidden');
+            let adviceHtml = '';
+            if (town.nextTowns && town.nextTowns.length > 0) {
+                adviceHtml += `<p class="mb-2">Considera di proseguire verso:</p><ul>`;
+                town.nextTowns.forEach(nextTownInfo => {
+                    const nextTown = caminoData.find(t => t.name.toLowerCase() === nextTownInfo.name.toLowerCase());
+                    if (nextTown) {
+                        let recommendation = '';
+                        if (nextTown.amenities.supermarkets.length > 0 && nextTown.amenities.shops.available) {
+                            recommendation = ' (con buoni servizi e albergue)';
+                        } else if (nextTown.albergues && nextTown.albergues.length > 0) {
+                            recommendation = ' (con albergue disponibili)';
+                        } else {
+                            recommendation = ' (potrebbe avere meno servizi)';
+                        }
+                        adviceHtml += `<li class="ml-4 list-disc"><strong>${nextTown.name}</strong> (circa ${nextTownInfo.distance} km)${recommendation}</li>`;
+                    }
+                });
+                adviceHtml += `</ul>`;
+
+                // Display details for the first next town for demonstration
+                const firstNextTown = caminoData.find(t => t.name.toLowerCase() === town.nextTowns[0].name.toLowerCase());
+                if (firstNextTown) {
+                    displayNextTownDetails(firstNextTown);
+                }
+            } else {
+                adviceHtml += '<p>Sei alla fine del percorso o non ci sono tappe successive note.</p>';
+                nextTownDetailsSection.classList.add('hidden');
+            }
+            adviceOutput.innerHTML = adviceHtml;
+        }
+
+        function displayNextTownDetails(nextTown) {
+            nextTownDetailsSection.classList.remove('hidden');
+            let detailsHtml = `<h3 class="text-xl font-bold mb-3 text-secondary">Dettagli per ${nextTown.name}</h3>`;
+
+            // Albergue in next town
+            if (nextTown.albergues && nextTown.albergues.length > 0) {
+                nextTown.albergues.sort((a, b) => a.price - b.price);
+                detailsHtml += `<p class="mb-2"><strong>Albergue a ${nextTown.name} (ordinati per prezzo):</strong></p><ul>`;
+                nextTown.albergues.forEach(alb => {
+                    const hasTentSpace = alb.tentAllowed ? ' (Spazio per tenda)' : '';
+                    detailsHtml += `<li class="ml-4 list-disc">
+                        ${alb.name} (${alb.type}) - €${alb.price}${hasTentSpace} <br>
+                        Indirizzo: ${alb.address}
+                    </li>`;
+                });
+                detailsHtml += `</ul>`;
+            } else {
+                detailsHtml += `<p class="mb-2">Nessun albergue conosciuto a ${nextTown.name}.</p>`;
+            }
+
+            // Supermercati in next town
+            detailsHtml += `<p class="mb-2 mt-4"><strong>Supermercati a ${nextTown.name}:</strong></p>`;
+            if (nextTown.amenities.supermarkets.length > 0) {
+                detailsHtml += `<ul>`;
+                nextTown.amenities.supermarkets.forEach(supermarket => {
+                    detailsHtml += `<li class="ml-4 list-disc">
+                        ${supermarket.name} - ${supermarket.address} <br>
+                        Orari: ${supermarket.hours} <br>
+                        Chiuso: ${supermarket.closingDays}
+                    </li>`;
+                });
+                detailsHtml += `</ul>`;
+            } else {
+                detailsHtml += `<p class="ml-4">Non disponibili o dettagli non specificati a ${nextTown.name}.</p>`;
+            }
+
+            nextTownDetailsOutput.innerHTML = detailsHtml;
+        }
+
+
+        // Funzione per ottenere il consiglio AI
+        getAiAdviceBtn.addEventListener('click', async () => {
+            aiAdviceOutput.textContent = '';
+            aiAdviceError.textContent = '';
+            
+            if (!currentTown) {
+                aiAdviceError.textContent = "Per favore, rileva la tua posizione o cerca un paese manualmente prima di chiedere un consiglio AI.";
+                return;
+            }
+
+            aiAdviceLoading.classList.remove('hidden');
+
+            const townName = currentTown.name;
+            let amenitiesSummary = [];
+
+            if (currentTown.amenities.supermarkets.length > 0) {
+                amenitiesSummary.push(`supermercati (${currentTown.amenities.supermarkets.map(s => s.name).join(', ')})`);
+            }
+            if (currentTown.amenities.fountains.length > 0) {
+                amenitiesSummary.push(`fontanelle`);
+            }
+            if (currentTown.amenities.campingShops.length > 0) {
+                amenitiesSummary.push(`negozi di articoli da campeggio/sportivi (${currentTown.amenities.campingShops.map(s => s.name).join(', ')})`);
+            }
+            if (currentTown.amenities.bakeries.length > 0) {
+                amenitiesSummary.push(`panetterie/pasticcerie (${currentTown.amenities.bakeries.map(b => b.name).join(', ')})`);
+            }
+            if (currentTown.campsites.length > 0) {
+                amenitiesSummary.push(`campeggi`);
+            }
+
+            const prompt = `Sei un assistente per i pellegrini sul Camino del Norte. Fornisci un breve consiglio o una curiosità per un pellegrino che si trova a ${townName}. Considera che in questa città ci sono i seguenti servizi: ${amenitiesSummary.join(', ')}. Il consiglio dovrebbe essere utile o interessante per un pellegrino.`;
+            
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    aiAdviceOutput.textContent = text;
+                } else {
+                    aiAdviceError.textContent = "Errore: La risposta dell'AI non è nel formato atteso.";
+                    console.error("Unexpected AI response structure:", result);
+                }
+            } catch (error) {
+                aiAdviceError.textContent = `Errore nel recupero del consiglio AI: ${error.message}.`;
+                console.error("Error fetching AI advice:", error);
+            } finally {
+                aiAdviceLoading.classList.add('hidden');
+            }
+        });
+
+
+        getLocationBtn.addEventListener('click', () => {
+            locationOutput.textContent = '';
+            errorOutput.textContent = '';
+            manualErrorOutput.textContent = ''; // Clear manual error
+            loadingSpinner.classList.remove('hidden');
+            hideAllSections();
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                loadingSpinner.classList.add('hidden');
+                errorOutput.textContent = "La geolocalizzazione non è supportata dal tuo browser.";
+            }
+        });
+
+        searchTownBtn.addEventListener('click', () => {
+            const townName = manualTownInput.value.trim();
+            locationOutput.textContent = '';
+            errorOutput.textContent = '';
+            manualErrorOutput.textContent = '';
+            hideAllSections();
+
+            if (townName) {
+                const foundTown = caminoData.find(town => town.name.toLowerCase() === townName.toLowerCase());
+                if (foundTown) {
+                    currentTown = foundTown; // Set current town for AI advice
+                    locationOutput.innerHTML = `<p>Hai cercato: <span class="font-bold text-primary">${foundTown.name}</span></p>`;
+                    displayTownInfo(foundTown);
+                } else {
+                    currentTown = null; // Reset current town
+                    manualErrorOutput.textContent = `Paese "${townName}" non trovato nei dati del Camino del Norte.`;
+                }
+            } else {
+                manualErrorOutput.textContent = "Per favore, inserisci il nome di un paese.";
+            }
+        });
+    </script>
+</body>
+</html>

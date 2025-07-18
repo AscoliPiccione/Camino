@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camino del Norte & Finisterre Info</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            font-size: 16px;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
+        }
+        .city-info div {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+        .city-info div:last-child {
+            border-bottom: none;
+        }
+        .city-info h2 {
+            color: #3498db;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .city-info h3 {
+            color: #2ecc71;
+            font-size: 16px;
+        }
+        .city-info h4 {
+            color: #e67e22;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .city-info ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 0;
+        }
+        .city-info ul li {
+            margin-bottom: 5px;
+        }
+        .no-info {
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Informazioni Camino del Norte & Finisterre</h1>
+
+        <label for="city-select">Seleziona una città:</label>
+        <select id="city-select" onchange="displayCityInfo()">
+            <option value="">-- Seleziona --</option>
+        </select>
+
+        <div id="city-info" class="city-info">
+            <p class="no-info">Seleziona una città dal menu a discesa per visualizzare le informazioni.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATABASE DEL CAMINO DEL NORTE E FINISTERRE (AMPLIATO) ---
+        const caminoData = [
+            {
+                name: "Irun",
+                albergues: [{ name: "Albergue de Peregrinos Jakobi", type: "Pubblico", price: 10, address: "Calle Lesaka 1", beds: 56, notes: "Aperto da Marzo a Ottobre. Cucina disponibile."
+                }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle Anaka 11" }, { name: "Carrefour", address: "Paseo Colón 10" }],
+                    pharmacies: [{ name: "Farmacia Lda. Ana M. Benito", address: "Paseo Colón 27" }],
+                    bakeries: [{ name: "Ogi Berri", address: "Paseo Colón 25" }],
+                    trekking_stores: [{ name: "Decathlon Irún", address: "Parque Comercial Txingudi" }],
+                    fountains: [{ name: "Fontanella Pubblica", address: "Piazza del Comune" }]
+                },
+                nextTowns: [{ name: "Pasajes de San Juan", distance: 6 }, { name: "San Sebastián", distance: 25 }]
+            },
+            {
+                name: "Pasajes de San Juan",
+                albergues: [{ name: "Albergue de Peregrinos Santa Ana", type: "Municipale", price: 12, address: "Plaza de Santiago", beds: 24, notes: "Aperto da Giugno a Settembre. No cucina."
+                }],
+                amenities: {
+                    supermarkets: [],
+                    pharmacies: [{ name: "Farmacia Lda. M. A. Pildain", address: "Donibane Kalea 65" }],
+                    bakeries: [{ name: "Panadería Olibet", address: "Donibane Kalea 73" }],
+                    trekking_stores: [],
+                    fountains: [{ name: "Fontanella", address: "Vicinanza chiesa" }]
+                },
+                nextTowns: [{ name: "San Sebastián", distance: 6 }]
+            },
+            {
+                name: "San Sebastián",
+                albergues: [{ name: "Albergue de Peregrinos La Sirena", type: "Pubblico", price: 18, address: "Paseo de Igeldo 25", beds: 102, notes: "Prenotazione obbligatoria. Cucina disponibile."
+                }, { name: "Albergue Juvenil Ulía", type: "Pubblico", price: 15, address: "Paseo de Ulía 297", beds: 62, notes: "Leggermente fuori dal centro."
+                }],
+                amenities: {
+                    supermarkets: [{ name: "Super Amara", address: "Calle de Urbieta 9" }, { name: "Mercadona", address: "Calle de San Martín 53" }],
+                    pharmacies: [{ name: "Farmacia Echániz", address: "Avenida de la Libertad 23" }],
+                    bakeries: [{ name: "Pastelería Oiartzun", address: "Calle Mayor 2" }],
+                    trekking_stores: [{ name: "Ternua", address: "Calle de Elkano 7" }, { name: "Forum Sport", address: "Centro Comercial Garbera" }],
+                    fountains: [{ name: "Fontanella", address: "Parco Alderdi Eder" }]
+                },
+                nextTowns: [{ name: "Orio", distance: 15 }, { name: "Zarautz", distance: 22 }]
+            },
+            {
+                name: "Orio",
+                albergues: [{ name: "Albergue de Peregrinos San Martín", type: "Privato", price: 15, address: "Ermita de San Martín de Tours", beds: 20, notes: "Posizione panoramica con cucina."
+                }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski", address: "Aritzaga Kalea 20" }],
+                    pharmacies: [{ name: "Farmacia Lda. M. J. Amas", address: "Aritzaga Kalea 1" }],
+                    bakeries: [{ name: "Pastelería Sayalero", address: "Aritzaga Kalea 14" }],
+                    trekking_stores: [],
+                    fountains: [{ name: "Fontanella", address: "Piazza dell'Amare" }]
+                },
+                nextTowns: [{ name: "Zarautz", distance: 5 }]
+            },
+            {
+                name: "Zarautz",
+                albergues: [{ name: "Albergue de Peregrinos de Zarautz", type: "Municipale", price: 10, address: "Polideportivo Aritzbatalde, Calle Zumalakarregi 16", beds: 40, notes: "Aperto solo Luglio e Agosto. No cucina."
+                }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Nafarroa Kalea 10" }, { name: "Eroski", address: "Lapurdi Kalea 15" }],
+                    pharmacies: [{ name: "Farmacia Lda. I. Eizaguirre", address: "Kale Nagusia 26" }],
+                    bakeries: [{ name: "Pastelería Egaña", address: "Zigordia Kalea 41" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Getaria", distance: 5 }, { name: "Zumaia", distance: 10 }]
+            },
+            {
+                name: "Getaria",
+                albergues: [],
+                amenities: {
+                    supermarkets: [{ name: "Coviran", address: "Krixketan-Bidea Kalea, 1" }],
+                    pharmacies: [{ name: "Farmacia Olaizola", address: "Kale Nagusia 25" }],
+                    bakeries: [{ name: "Gure Ogia", address: "Kale Nagusia 29" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Zumaia", distance: 5 }]
+            },
+            {
+                name: "Zumaia",
+                albergues: [{ name: "Albergue de Peregrinos Convento de San José", type: "Parrocchiale", price: 10, address: "Calle San Jose 11", beds: 22, notes: "Aperto da Giugno a Settembre. No cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski", address: "Eusebio Gurrutxaga Plaza" }],
+                    pharmacies: [{ name: "Farmacia Ortopedia Sarasketa", address: "Erribera Kalea 20" }],
+                    bakeries: [{ name: "Ogi Berri", address: "Aita Mari Kalea 1" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Deba", distance: 13 }]
+            },
+            {
+                name: "Deba",
+                albergues: [{ name: "Albergue de Peregrinos Geltoki", type: "Municipale", price: 10, address: "Plaza de la Estación (Geltoki Plaza)", beds: 56, notes: "Aperto tutto l'anno. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski", address: "Ifar Kalea 2" }],
+                    pharmacies: [{ name: "Farmacia Lda. A. Azpiazu", address: "Ifar Kalea 10" }],
+                    bakeries: [{ name: "Pastelería Egaña", address: "Hondartza Kalea 1" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Markina-Xemein", distance: 24 }]
+            },
+            {
+                name: "Markina-Xemein",
+                albergues: [{ name: "Albergue de Peregrinos Convento del Carmen", type: "Parrocchiale", price: 15, address: "Plaza del Carmen 5", beds: 36, notes: "Ospitato in un convento. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski", address: "Erdikokalea Kalea 12" }],
+                    pharmacies: [{ name: "Farmacia Barinagarrementeria", address: "Guén Kalea 10" }],
+                    bakeries: [{ name: "Ogi-Bake", address: "Zeharkalea 12" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Zenarruza", distance: 6 }, { name: "Gernika-Lumo", distance: 25 }]
+            },
+            {
+                name: "Zenarruza",
+                albergues: [{ name: "Albergue del Monasterio de Zenarruza", type: "Monastico", price: 12, address: "Monasterio de Zenarruza", beds: 20, notes: "Esperienza unica in un monastero. No cucina." }],
+                amenities: { supermarkets: [], pharmacies: [], bakeries: [], trekking_stores: [], fountains: [] },
+                nextTowns: [{ name: "Gernika-Lumo", distance: 19 }]
+            },
+            {
+                name: "Gernika-Lumo",
+                albergues: [{ name: "Albergue Juvenil y de Peregrinos", type: "Pubblico", price: 15, address: "Calle Kortezubi 9", beds: 48, notes: "Struttura moderna con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Iparragirre Kalea 25" }, { name: "Eroski", address: "Juan Calzada Kalea 10" }],
+                    pharmacies: [{ name: "Farmacia Adelaida Zarragoikoetxea", address: "Don Tello Kalea 1" }],
+                    bakeries: [{ name: "Goizalde", address: "Barrenkalea 16" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Lezama", distance: 21 }]
+            },
+            {
+                name: "Lezama",
+                albergues: [{ name: "Albergue de Peregrinos de Lezama", type: "Municipale", price: 5, address: "Barrio Garaioltza 133", beds: 20, notes: "Uno degli albergue più economici. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Lezama", address: "Aretxalde Auzoa 50" }],
+                    pharmacies: [{ name: "Farmacia Lezama", address: "Garaioltza Auzoa 87" }],
+                    bakeries: [{ name: "Lezamako Okindegia", address: "Garaioltza Auzoa 85" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Bilbao", distance: 11 }]
+            },
+            {
+                name: "Bilbao",
+                albergues: [{ name: "Albergue de Peregrinos Santa Cruz de Begoña", type: "Parrocchiale", price: 10, address: "Calle Padre Remigio Vilariño 1", beds: 22, notes: "Contributo suggerito. No cucina." }, { name: "Bilbao Akelarre Hostel", type: "Privato", price: 20, address: "Calle Morgan 4", beds: 60, notes: "Centrale e popolare. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Plaza del Sagrado Corazón 5" }, { name: "Eroski", address: "Calle Buenos Aires 13" }],
+                    pharmacies: [{ name: "Farmacia Indautxu", address: "Urkixo Zumarkalea 60" }],
+                    bakeries: [{ name: "Pastelería Arrese", address: "Gran Vía 24" }],
+                    trekking_stores: [{ name: "Decathlon City", address: "Gran Vía 20" }, { name: "The North Face Store", address: "Calle Ercilla 25" }],
+                    fountains: [{ name: "Fontanella Pubblica", address: "Parco Doña Casilda" }]
+                },
+                nextTowns: [{ name: "Portugalete", distance: 19 }]
+            },
+            {
+                name: "Portugalete",
+                albergues: [{ name: "Albergue de Peregrinos de Portugalete", type: "Municipale", price: 6, address: "Polideportivo Zubi Alde", beds: 30, notes: "Ottimo rapporto qualità-prezzo. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski", address: "Carlos VII Hiribidea 15" }],
+                    pharmacies: [{ name: "Farmacia Ortopedia J.L. Aperribay", address: "General Castaños Kalea 30" }],
+                    bakeries: [{ name: "Pastelería Oiartzun", address: "General Castaños Kalea 15" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Pobeña", distance: 10 }, { name: "Castro-Urdiales", distance: 24 }]
+            },
+            {
+                name: "Pobeña",
+                albergues: [{ name: "Albergue de Peregrinos de Pobeña", type: "Municipale", price: 10, address: "Barrio Pobeña", beds: 24, notes: "Aperto solo in estate (Giugno-Settembre). No cucina." }],
+                amenities: { supermarkets: [], pharmacies: [], bakeries: [], trekking_stores: [], fountains: [] },
+                nextTowns: [{ name: "Castro-Urdiales", distance: 14 }]
+            },
+            {
+                name: "Castro-Urdiales",
+                albergues: [{ name: "Albergue de Peregrinos de Castro Urdiales", type: "Municipale", price: 6, address: "Calle de la Rúa 19", beds: 16, notes: "Posti limitati, arrivare presto. Cucina disponibile." }, { name: "Albergue-Camping de Castro", type: "Privato", price: 15, address: "Barrio Campijo 65", beds: 44, notes: "Buona opzione con piscina e bar." }],
+                amenities: {
+                    supermarkets: [{ name: "Lupa", address: "Calle Leonardo Rucabado 25" }, { name: "Mercadona", address: "Avenida de la Constitución 1" }],
+                    pharmacies: [{ name: "Farmacia Sámano", address: "Barrio Montealegre 23" }],
+                    bakeries: [{ name: "Pastelería Vistalegre", address: "Calle la Rúa 21" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Islares", distance: 7 }, { name: "Laredo", distance: 20 }]
+            },
+            {
+                name: "Islares",
+                albergues: [{ name: "Albergue de Peregrinos de Islares", type: "Municipale", price: 5, address: "Antiguo consultorio, Calle Escuela", beds: 18, notes: "Essenziale e molto economico. No cucina." }],
+                amenities: { supermarkets: [], pharmacies: [], bakeries: [], trekking_stores: [], fountains: [] },
+                nextTowns: [{ name: "Liendo", distance: 8 }]
+            },
+            {
+                name: "Liendo",
+                albergues: [{ name: "Albergue de Peregrinos Saturnino Candina", type: "Municipale", price: 10, address: "Barrio Hazas", beds: 30, notes: "Struttura accogliente con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Coviran", address: "Barrio la Portilla 20" }],
+                    pharmacies: [{ name: "Farmacia de Liendo", address: "Barrio Hazas 24" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Laredo", distance: 5 }]
+            },
+            {
+                name: "Laredo",
+                albergues: [{ name: "Albergue-Residencia Casa de la Trinidad", type: "Parrocchiale", price: 10, address: "Calle San Francisco 22", beds: 42, notes: "Atmosfera comunitaria, include cena e colazione." }, { name: "Albergue El Buen Pastor", type: "Privato", price: 15, address: "Calle Menéndez Pelayo 10", beds: 20, notes: "Alternativa privata con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Lupa", address: "Avenida de Cantabria 1" }, { name: "Mercadona", address: "Calle Emperador 1" }],
+                    pharmacies: [{ name: "Farmacia Central", address: "Calle Menéndez Pelayo 1" }],
+                    bakeries: [{ name: "Confitería Santos", address: "Calle de San Francisco" }],
+                    trekking_stores: [],
+                    fountains: [{ name: "Fontanella Pubblica", address: "Piazza di Alameda" }]
+                },
+                nextTowns: [{ name: "Güemes", distance: 29 }]
+            },
+            {
+                name: "Güemes",
+                albergues: [{ name: "Albergue La Cabaña del Abuelo Peuto", type: "Donativo", price: 5, address: "Barrio de Gargollo", beds: 90, notes: "Un'istituzione del Camino, esperienza indimenticabile. Include cena e colazione." }],
+                amenities: { supermarkets: [], pharmacies: [], bakeries: [], trekking_stores: [], fountains: [] },
+                nextTowns: [{ name: "Somo", distance: 8 }, { name: "Santander", distance: 12 }]
+            },
+            {
+                name: "Somo",
+                albergues: [],
+                amenities: {
+                    supermarkets: [{ name: "Lupa", address: "Calle las Quebrantas" }],
+                    pharmacies: [{ name: "Farmacia de Somo", address: "Calle la Fuente" }],
+                    bakeries: [{ name: "Panadería Somo", address: "Calle las Dunas" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Santander", distance: 4 }]
+            },
+            {
+                name: "Santander",
+                albergues: [{ name: "Albergue de Peregrinos Santos Mártires", type: "Municipale", price: 15, address: "Calle Ruamayor 7", beds: 40, notes: "Posizione centrale con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle de Castilla 71" }, { name: "Carrefour", address: "Calle Joaquín Costa 45" }],
+                    pharmacies: [{ name: "Farmacia Amós de Escalante", address: "Calle de Burgos 5" }],
+                    bakeries: [{ name: "Gallofa & Co", address: "Calle de Isabel II 23" }],
+                    trekking_stores: [{ name: "Decathlon City", address: "Calle San Fernando 14" }, { name: "Deportes K2", address: "Calle de Lealtad 13" }],
+                    fountains: [{ name: "Fontanella", address: "Giardini di Pereda" }]
+                },
+                nextTowns: [{ name: "Boo de Piélagos", distance: 15 }, { name: "Santillana del Mar", distance: 37 }]
+            },
+            {
+                name: "Boo de Piélagos",
+                albergues: [{ name: "Albergue Piedad", type: "Privato", price: 15, address: "Barrio San Juan 144", beds: 24, notes: "Accogliente, con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Coviran", address: "Barrio la Piélagos 10" }],
+                    pharmacies: [{ name: "Farmacia de Boo de Piélagos", address: "Avenida de Luis de la Concha 1" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Santillana del Mar", distance: 22 }]
+            },
+            {
+                name: "Santillana del Mar",
+                albergues: [{ name: "Albergue de Peregrinos de Santillana del Mar", type: "Municipale", price: 10, address: "Plaza Abad Francisco Navarro", beds: 16, notes: "Posti limitati, nel cuore del borgo medievale." }, { name: "Albergue El Convento", type: "Privato", price: 15, address: "Calle Antonio Niceas 2", beds: 55, notes: "Grande e accogliente, con cena comunitaria." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Lupa", address: "Avenida de Le Dorat 1" }],
+                    pharmacies: [{ name: "Farmacia de Santillana", address: "Plaza Mayor 10" }],
+                    bakeries: [{ name: "Casa Quevedo", address: "Calle de Juan Infante 36" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Cóbreces", distance: 10 }, { name: "Comillas", distance: 17 }]
+            },
+            {
+                name: "Cóbreces",
+                albergues: [{ name: "Albergue de la Abadía de Santa María de Viaceli", type: "Monastico", price: 10, address: "Monasterio Cisterciense", beds: 20, notes: "Ospitato in un'abbazia trappista. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [],
+                    pharmacies: [{ name: "Farmacia de Cóbreces", address: "Barrio San Roque" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Comillas", distance: 7 }]
+            },
+            {
+                name: "Comillas",
+                albergues: [{ name: "Albergue de Peregrinos de Comillas", type: "Municipale", price: 10, address: "Calle Antonio López 1", beds: 22, notes: "Aperto da Aprile a Ottobre. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Lupa", address: "Paseo de Solatorre" }],
+                    pharmacies: [{ name: "Farmacia de Comillas", address: "Calle de los Vientos 5" }],
+                    bakeries: [{ name: "Pastelería Teresas", address: "Plaza de la Constitución" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "San Vicente de la Barquera", distance: 12 }]
+            },
+            {
+                name: "San Vicente de la Barquera",
+                albergues: [{ name: "Albergue de Peregrinos de San Vicente", type: "Municipale", price: 10, address: "Convento de San Luis, Calle Alta 10", beds: 30, notes: "Posizione storica con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Lupa", address: "Avenida de los Soportales" }],
+                    pharmacies: [{ name: "Farmacia del Dr. González", address: "Calle del Mercado 3" }],
+                    bakeries: [{ name: "Panadería La Gloria", address: "Plaza Mayor del Fuero" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Colombres", distance: 11 }, { name: "Llanes", distance: 31 }]
+            },
+            {
+                name: "Colombres",
+                albergues: [{ name: "Albergue El Cantu", type: "Pubblico", price: 15, address: "Calle Lamadrid", beds: 130, notes: "Grande struttura, no cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Alimerka", address: "Plaza Manuel Ibáñez" }],
+                    pharmacies: [{ name: "Farmacia de Colombres", address: "Calle de Francisco de la Borbolla" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Llanes", distance: 20 }]
+            },
+            {
+                name: "Llanes",
+                albergues: [{ name: "Albergue de Peregrinos de Llanes", type: "Municipale", price: 10, address: "Calle Posada Herrera 5", beds: 38, notes: "Aperto da Pasqua a Ottobre. Cucina disponibile." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle de la Concepcion" }, { name: "Alimerka", address: "Calle de Celso Amieva" }],
+                    pharmacies: [{ name: "Farmacia de Llanes", address: "Calle Mayor 1" }],
+                    bakeries: [{ name: "Pastelería-Bombonería Vega", address: "Calle Pidal 1" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Ribadesella", distance: 30 }]
+            },
+            {
+                name: "Ribadesella",
+                albergues: [{ name: "Albergue de Peregrinos de San Esteban de Leces", type: "Municipale", price: 10, address: "San Esteban de Leces (a 2km)", beds: 24, notes: "Posizione tranquilla fuori città, con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Alimerka", address: "Calle del Comercio" }],
+                    pharmacies: [{ name: "Farmacia de Ribadesella", address: "Gran Vía de Agustín Argüelles" }],
+                    bakeries: [{ name: "Panadería-Confitería La Veguina", address: "Calle Manuel Caso de la Villa" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Colunga", distance: 17 }, { name: "Villaviciosa", distance: 29 }]
+            },
+            {
+                name: "Colunga",
+                albergues: [],
+                amenities: {
+                    supermarkets: [{ name: "Alimerka", address: "Calle Grande Covián" }],
+                    pharmacies: [{ name: "Farmacia de Colunga", address: "Calle Grande Covián" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Villaviciosa", distance: 12 }]
+            },
+            {
+                name: "Villaviciosa",
+                albergues: [{ name: "Albergue de Peregrinos de Villaviciosa", type: "Municipale", price: 10, address: "Calle El Ancho 2", beds: 24, notes: "Aperto da Aprile a Ottobre. Cucina." }, { name: "Albergue El Congreso", type: "Privato", price: 14, address: "Plaza del Ayuntamiento 25", beds: 30, notes: "Centrale e conveniente." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle del Agua" }],
+                    pharmacies: [{ name: "Farmacia de Villaviciosa", address: "Plaza del Ayuntamiento" }],
+                    bakeries: [{ name: "Confitería Viena", address: "Calle del Sol" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Gijón (Costa)", distance: 29 }, { name: "Pola de Siero (Primitivo)", distance: 22 }]
+            },
+            {
+                name: "Gijón (Costa)",
+                albergues: [{ name: "Albergue de Peregrinos de Gijón", type: "Municipale", price: 10, address: "Camping Deva, Camín de la Pasadiella 85", beds: 36, notes: "Situato nel camping, un po' fuori dal centro." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Avenida de la Costa 86" }, { name: "Alimerka", address: "Calle Corrida 20" }],
+                    pharmacies: [{ name: "Farmacia Lda. Isabel de la Fuente", address: "Calle Corrida 3" }],
+                    bakeries: [{ name: "La Casa del Chocolate", address: "Calle San Bernardo 20" }],
+                    trekking_stores: [{ name: "Decathlon Gijón", address: "Parque Comercial Roces" }],
+                    fountains: [{ name: "Fontanella Pubblica", address: "Lungomare San Lorenzo" }]
+                },
+                nextTowns: [{ name: "Avilés", distance: 25 }]
+            },
+            {
+                name: "Pola de Siero (Primitivo)",
+                albergues: [{ name: "Albergue de Peregrinos de Pola de Siero", type: "Municipale", price: 8, address: "Calle Celleruelo 57", beds: 30, notes: "Per chi devia verso il Cammino Primitivo." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle Alcalde Parrondo" }],
+                    pharmacies: [{ name: "Farmacia Central", address: "Calle Marquesa de Canillejas" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Oviedo", distance: 18 }]
+            },
+            {
+                name: "Oviedo (Primitivo)",
+                albergues: [{ name: "Albergue de Peregrinos El Salvador", type: "Municipale", price: 8, address: "Calle Leopoldo Alas 20", beds: 51, notes: "Capitale del Cammino Primitivo." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle de Uría" }],
+                    pharmacies: [{ name: "Farmacia Campoamor", address: "Calle Campoamor" }],
+                    bakeries: [{ name: "Rialto", address: "Calle San Francisco" }],
+                    trekking_stores: [{ name: "Decathlon Oviedo", address: "Centro Comercial Los Prados" }],
+                    fountains: [{ name: "Fontanella Pubblica", address: "Parque San Francisco" }]
+                },
+                nextTowns: []
+            },
+            {
+                name: "Avilés",
+                albergues: [{ name: "Albergue de Peregrinos Pedro Solís", type: "Municipale", price: 10, address: "Calle de la Magdalena 1", beds: 44, notes: "Nel centro storico, con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Mercadona", address: "Calle de la Cámara 41" }],
+                    pharmacies: [{ name: "Farmacia Lda. Covadonga Nodal", address: "Calle la Fruta 12" }],
+                    bakeries: [{ name: "Confitería la Duquesita", address: "Calle la Fruta 1" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Soto de Luiña", distance: 39 }]
+            },
+            {
+                name: "Soto de Luiña",
+                albergues: [{ name: "Albergue de Peregrinos de Soto de Luiña", type: "Parrocchiale", price: 10, address: "Plaza de la Iglesia", beds: 22, notes: "Accogliente e con cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Pequeño supermercado local", address: "Carretera General" }],
+                    pharmacies: [{ name: "Farmacia de Soto de Luiña", address: "Carretera General" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Cadavedo", distance: 24 }]
+            },
+            {
+                name: "Cadavedo",
+                albergues: [{ name: "Albergue de Peregrinos de Cadavedo", type: "Municipale", price: 8, address: "Antiche scuole", beds: 22, notes: "Struttura semplice con cucina." }],
+                amenities: {
+                    supermarkets: [],
+                    pharmacies: [],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Luarca", distance: 16 }]
+            },
+            {
+                name: "Luarca",
+                albergues: [{ name: "Albergue de Peregrinos de Luarca", type: "Municipale", price: 10, address: "Polígono La Capitana", beds: 28, notes: "Moderno, un po' fuori dal centro. Cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Alimerka", address: "Avenida de Galicia" }],
+                    pharmacies: [{ name: "Farmacia de Luarca", address: "Calle Párroco Camino" }],
+                    bakeries: [{ name: "Confitería Ancomar", address: "Paseo del Muelle" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "La Caridad", distance: 28 }]
+            },
+            {
+                name: "La Caridad",
+                albergues: [{ name: "Albergue de Peregrinos de La Caridad", type: "Municipale", price: 10, address: "Avenida de Asturias", beds: 30, notes: "Buona sosta prima della Galizia. Cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Claudio", address: "Avenida de Asturias" }],
+                    pharmacies: [{ name: "Farmacia de La Caridad", address: "Avenida de Asturias" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Ribadeo", distance: 22 }]
+            },
+            {
+                name: "Ribadeo",
+                albergues: [{ name: "Albergue de Peregrinos de Ribadeo", type: "Xunta", price: 10, address: "Carretera del Faro", beds: 24, notes: "Primo albergue pubblico in Galizia. Cucina." }, { name: "Albergue Viruxe", type: "Privato", price: 12, address: "Camiño Veiga da Aira 4", beds: 20, notes: "Opzione economica e accogliente." }],
+                amenities: {
+                    supermarkets: [{ name: "Gadis", address: "Avenida de Galicia" }, { name: "Eroski", address: "Calle San Roque" }],
+                    pharmacies: [{ name: "Farmacia Álvarez", address: "Calle Rodríguez Murias" }],
+                    bakeries: [{ name: "Pastelería-Cafetería La Gallega", address: "Calle San Roque" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Lourenzá", distance: 29 }]
+            },
+            {
+                name: "Lourenzá",
+                albergues: [{ name: "Albergue de Peregrinos de Lourenzá", type: "Xunta", price: 10, address: "Calle do Convento 1", beds: 25, notes: "Struttura pubblica ben tenuta. Cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Claudio", address: "Plaza del Conde Santo" }],
+                    pharmacies: [{ name: "Farmacia de Lourenzá", address: "Calle del Convento" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Abadín", distance: 25 }]
+            },
+            {
+                name: "Abadín",
+                albergues: [{ name: "Albergue de Peregrinos de Gontán", type: "Xunta", price: 10, address: "Gontán", beds: 26, notes: "Situato a Gontán, poco prima di Abadín. Cucina." }, { name: "Albergue Xabarín", type: "Privato", price: 14, address: "Avenida de Galicia 28", beds: 42, notes: "Buona alternativa privata." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado en Gontán", address: "Carretera General" }],
+                    pharmacies: [{ name: "Farmacia de Abadín", address: "Plaza del Ayuntamiento" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Vilalba", distance: 21 }]
+            },
+            {
+                name: "Vilalba",
+                albergues: [{ name: "Albergue de Peregrinos de Vilalba", type: "Xunta", price: 10, address: "Rúa da Pravia 50", beds: 42, notes: "Grande e moderno. Cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Gadis", address: "Rúa da Pravia" }, { name: "Dia", address: "Avenida Terra Cha" }],
+                    pharmacies: [{ name: "Farmacia Central", address: "Plaza de la Constitución" }],
+                    bakeries: [{ name: "Panadería-Pastelería O Forno", address: "Rúa da Pravia" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Baamonde", distance: 20 }]
+            },
+            {
+                name: "Baamonde",
+                albergues: [{ name: "Albergue de Peregrinos de Baamonde", type: "Xunta", price: 10, address: "Carretera de Vilalba 9", beds: 64, notes: "Grande e con un bel giardino. Cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Bar-Tienda", address: "Carretera General" }],
+                    pharmacies: [],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Miraz", distance: 15 }, { name: "Sobrado dos Monxes", distance: 41 }]
+            },
+            {
+                name: "Miraz",
+                albergues: [{ name: "Albergue de Peregrinos de Miraz", type: "Donativo", price: 5, address: "Corral da Fonte", beds: 26, notes: "Gestito dalla Confraternity of Saint James. Cucina." }],
+                amenities: { supermarkets: [], pharmacies: [], bakeries: [], trekking_stores: [], fountains: [] },
+                nextTowns: [{ name: "Sobrado dos Monxes", distance: 26 }]
+            },
+            {
+                name: "Sobrado dos Monxes",
+                albergues: [{ name: "Albergue del Monasterio de Sobrado", type: "Monastico", price: 10, address: "Monasterio de Santa María", beds: 120, notes: "Dormire in un monastero attivo. Cucina." }],
+                amenities: {
+                    supermarkets: [{ name: "Supermercado Claudio", address: "Avenida de Santiago" }],
+                    pharmacies: [{ name: "Farmacia de Sobrado", address: "Plaza del Portal" }],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Arzúa", distance: 22 }]
+            },
+            {
+                name: "Arzúa",
+                albergues: [{ name: "Albergue de Peregrinos de Arzúa", type: "Xunta", price: 10, address: "Rúa Cima do Lugar 6", beds: 56, notes: "Qui il Camino del Norte si unisce al Francés. Cucina." }, { name: "Albergue Vía Láctea", type: "Privato", price: 15, address: "Calle Xosé Neira Vilas 26", beds: 80, notes: "Una delle tante opzioni private." }],
+                amenities: {
+                    supermarkets: [{ name: "Gadis", address: "Rúa de Lugo" }, { name: "Dia", address: "Rúa de Lugo" }],
+                    pharmacies: [{ name: "Farmacia de Arzúa", address: "Rúa de Lugo" }],
+                    bakeries: [{ name: "Panadería-Pastelería Esmeralda", address: "Avenida de Lugo" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "O Pedrouzo", distance: 19 }]
+            },
+            {
+                name: "O Pedrouzo",
+                albergues: [{ name: "Albergue de Peregrinos de Arca do Pino", type: "Xunta", price: 10, address: "Rúa do Concello 4", beds: 124, notes: "Ultima grande fermata pubblica. Cucina." }, { name: "Albergue Otero", type: "Privato", price: 15, address: "Rúa Forcarei 2", beds: 40, notes: "Opzione privata con giardino." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski", address: "Avenida de Santiago" }],
+                    pharmacies: [{ name: "Farmacia de O Pino", address: "Avenida de Santiago" }],
+                    bakeries: [{ name: "Panadería Pedrouzo", address: "Avenida de Santiago" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Santiago de Compostela", distance: 20 }]
+            },
+            {
+                name: "Santiago de Compostela",
+                albergues: [{ name: "Albergue Seminario Menor", type: "Privato", price: 15, address: "Avenida de Quiroga Palacios 2", beds: 250, notes: "Grande, con camere singole e multiple." }, { name: "Albergue Fin del Camino", type: "Privato", price: 15, address: "Rúa de Moscova 7", beds: 60, notes: "Popolare e ben recensito."
+                }],
+                amenities: {
+                    supermarkets: [{ name: "Gadis", address: "Rúa do Hórreo" }, { name: "Mercadona", address: "Rúa de Frei Rosendo Salvado" }],
+                    pharmacies: [{ name: "Farmacia Bescansa", address: "Praza do Toural" }],
+                    bakeries: [{ name: "Pastelería Tarta de Santiago", address: "Rúa do Vilar" }],
+                    trekking_stores: [{ name: "Decathlon City", address: "Centro Comercial As Cancelas" }, { name: "Cimalp", address: "Rúa da Senra" }],
+                    fountains: [{ name: "Fontanella Pubblica", address: "Piazza dell'Obradoiro" }]
+                },
+                nextTowns: [{ name: "Negreira", distance: 21 }, {name: "Fisterra", distance: 89, notes: "Inizio del Camino a Finisterre"}]
+            },
+            {
+                name: "Negreira",
+                albergues: [{ name: "Albergue de Peregrinos de Negreira", type: "Xunta", price: 10, address: "Rúa do Carballo 5", beds: 30, notes: "Punto di partenza per Finisterre." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski City", address: "Rúa do Carballo" }],
+                    pharmacies: [{ name: "Farmacia Negreira", address: "Rúa Afonso Senra" }],
+                    bakeries: [{ name: "Panadería Santa Rita", address: "Rúa do Carballo" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Olveiroa", distance: 33 }]
+            },
+            {
+                name: "Olveiroa",
+                albergues: [{ name: "Albergue de Peregrinos de Olveiroa", type: "Xunta", price: 10, address: "Rúa do Albergue", beds: 32, notes: "Albergue in un pittoresco villaggio." }],
+                amenities: {
+                    supermarkets: [{ name: "Tienda Local", address: "Rúa Principal" }],
+                    pharmacies: [],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Cee", distance: 19 }, { name: "Muxía", distance: 30 }]
+            },
+            {
+                name: "Cee",
+                albergues: [{ name: "Albergue de Peregrinos de Cee", type: "Xunta", price: 10, address: "Avenida Fisterra 3", beds: 34, notes: "Grande albergue con tutti i servizi." }],
+                amenities: {
+                    supermarkets: [{ name: "Froiz", address: "Rúa da Coruña" }],
+                    pharmacies: [{ name: "Farmacia Cee", address: "Rúa da Coruña" }],
+                    bakeries: [{ name: "Panadería Xallas", address: "Rúa da Coruña" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Corcubión", distance: 2 }, { name: "Fisterra", distance: 15 }]
+            },
+            {
+                name: "Corcubión",
+                albergues: [{ name: "Albergue de Peregrinos de Corcubión", type: "Municipale", price: 8, address: "Rúa da Praia 1", beds: 20, notes: "Piccolo albergue con vista mare." }],
+                amenities: {
+                    supermarkets: [],
+                    pharmacies: [],
+                    bakeries: [],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Fisterra", distance: 13 }]
+            },
+            {
+                name: "Fisterra",
+                albergues: [{ name: "Albergue de Peregrinos de Fisterra", type: "Xunta", price: 10, address: "Rúa da Coruña 1", beds: 50, notes: "Ultimo albergue del Camino, vicino al faro." },
+                              { name: "Albergue Fin del Mundo", type: "Privato", price: 18, address: "Rúa da Coruña 12", beds: 30, notes: "Comodo e ben attrezzato." }],
+                amenities: {
+                    supermarkets: [{ name: "Eroski City", address: "Rúa da Coruña" }],
+                    pharmacies: [{ name: "Farmacia Fisterra", address: "Rúa do Calvario" }],
+                    bakeries: [{ name: "Panadería Fisterra", address: "Rúa Real" }],
+                    trekking_stores: [{ name: "Tienda del Peregrino", address: "Rúa da Coruña" }],
+                    fountains: [{ name: "Fontanella del Faro", address: "Faro de Fisterra" }]
+                },
+                nextTowns: [{ name: "Muxía", distance: 29, notes: "Collegamento con il Camino a Muxía" }]
+            },
+            {
+                name: "Muxía",
+                albergues: [{ name: "Albergue de Peregrinos de Muxía", type: "Xunta", price: 10, address: "Rúa da Virxe da Barca 10", beds: 48, notes: "Albergue nuovo con vista mare." },
+                              { name: "Albergue Bela Muxía", type: "Privato", price: 16, address: "Rúa Virxe da Barca 22", beds: 25, notes: "Accogliente e centrale." }],
+                amenities: {
+                    supermarkets: [{ name: "Dia", address: "Rúa Virxe da Barca" }],
+                    pharmacies: [{ name: "Farmacia Muxía", address: "Rúa Real" }],
+                    bakeries: [{ name: "Panadería Muxía", address: "Rúa da Mariña" }],
+                    trekking_stores: [],
+                    fountains: []
+                },
+                nextTowns: [{ name: "Fisterra", distance: 29, notes: "Collegamento con il Camino a Finisterre" }]
+            }
+        ];
+
+        // La funzione displayCityInfo è ora definita globalmente e recupera gli elementi ogni volta
+        function displayCityInfo() {
+            // Recupera gli elementi del DOM ogni volta che la funzione viene chiamata
+            const citySelect = document.getElementById('city-select');
+            const cityInfoDiv = document.getElementById('city-info');
+
+            // Aggiungi controlli per assicurarti che gli elementi esistano
+            if (!citySelect) {
+                console.error('Errore: Elemento #city-select non trovato!');
+                return;
+            }
+            if (!cityInfoDiv) {
+                console.error('Errore: Elemento #city-info non trovato!');
+                return;
+            }
+
+            const selectedCityName = citySelect.value;
+            console.log('Città selezionata:', selectedCityName);
+            cityInfoDiv.innerHTML = ''; // Pulisce le informazioni precedenti
+
+            if (!selectedCityName) {
+                cityInfoDiv.innerHTML = '<p class="no-info">Seleziona una città dal menu a discesa per visualizzare le informazioni.</p>';
+                return;
+            }
+
+            const city = caminoData.find(c => c.name === selectedCityName);
+            
+            if (city) {
+                console.log('Dati della città trovati:', city);
+                let htmlContent = `<h2>${city.name}</h2>`;
+
+                // Albergues
+                htmlContent += '<div><h3>Albergues:</h3>';
+                if (city.albergues && city.albergues.length > 0) {
+                    htmlContent += '<ul>';
+                    city.albergues.forEach(alb => {
+                        htmlContent += `<li><strong>${alb.name}</strong> (${alb.type}) - Prezzo: ${alb.price}€, Letti: ${alb.beds}, Indirizzo: ${alb.address}. Note: ${alb.notes}</li>`;
+                    });
+                    htmlContent += '</ul>';
+                } else {
+                    htmlContent += '<p class="no-info">Nessun albergue disponibile.</p>';
+                }
+                htmlContent += '</div>';
+
+                // Amenities
+                htmlContent += '<div><h3>Servizi:</h3>';
+                const amenities = city.amenities;
+                const hasAmenities = Object.values(amenities).some(arr => arr.length > 0);
+
+                if (hasAmenities) {
+                    if (amenities.supermarkets && amenities.supermarkets.length > 0) {
+                        htmlContent += '<h4>Supermercati:</h4><ul>';
+                        amenities.supermarkets.forEach(s => {
+                            htmlContent += `<li>${s.name} - ${s.address}</li>`;
+                        });
+                        htmlContent += '</ul>';
+                    }
+                    if (amenities.pharmacies && amenities.pharmacies.length > 0) {
+                        htmlContent += '<h4>Farmacie:</h4><ul>';
+                        amenities.pharmacies.forEach(p => {
+                            htmlContent += `<li>${p.name} - ${p.address}</li>`;
+                        });
+                        htmlContent += '</ul>';
+                    }
+                    if (amenities.bakeries && amenities.bakeries.length > 0) {
+                        htmlContent += '<h4>Panetterie:</h4><ul>';
+                        amenities.bakeries.forEach(b => {
+                            htmlContent += `<li>${b.name} - ${b.address}</li>`;
+                        });
+                        htmlContent += '</ul>';
+                    }
+                    if (amenities.trekking_stores && amenities.trekking_stores.length > 0) {
+                        htmlContent += '<h4>Negozi di Trekking:</h4><ul>';
+                        amenities.trekking_stores.forEach(t => {
+                            htmlContent += `<li>${t.name} - ${t.address}</li>`;
+                        });
+                        htmlContent += '</ul>';
+                    }
+                    // New: Fountains
+                    if (amenities.fountains && amenities.fountains.length > 0) {
+                        htmlContent += '<h4>Fontanelle:</h4><ul>';
+                        amenities.fountains.forEach(f => {
+                            htmlContent += `<li>${f.name} ${f.address ? `- ${f.address}` : ''}</li>`;
+                        });
+                        htmlContent += '</ul>';
+                    }
+                } else {
+                    htmlContent += '<p class="no-info">Nessun servizio disponibile.</p>';
+                }
+                htmlContent += '</div>';
+
+                // Next Towns
+                htmlContent += '<div><h3>Prossime città:</h3>';
+                if (city.nextTowns && city.nextTowns.length > 0) {
+                    htmlContent += '<ul>';
+                    city.nextTowns.forEach(town => {
+                        htmlContent += `<li>${town.name} (${town.distance} km) ${town.notes ? ` - ${town.notes}` : ''}</li>`;
+                    });
+                    htmlContent += '</ul>';
+                } else {
+                    htmlContent += '<p class="no-info">Questa è l\'ultima città o non ci sono informazioni sulle prossime città.</p>';
+                }
+                htmlContent += '</div>';
+
+                cityInfoDiv.innerHTML = htmlContent;
+            } else {
+                console.log('Dati della città non trovati per:', selectedCityName);
+                cityInfoDiv.innerHTML = '<p class="no-info">Informazioni per la città selezionata non trovate.</p>';
+            }
+        }
+
+        // Questo listener popola il menu a tendina solo quando il DOM è completamente caricato
+        document.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM completamente caricato!');
+            const citySelect = document.getElementById('city-select');
+            
+            if (!citySelect) {
+                console.error('Errore: Elemento #city-select non trovato durante il caricamento del DOM!');
+                return;
+            }
+
+            // Popola il menu a tendina con i nomi delle città
+            caminoData.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.name;
+                option.textContent = city.name;
+                citySelect.appendChild(option);
+            });
+            console.log('Menu a tendina popolato.');
+        });
+    </script>
+
+</body>
+</html>
