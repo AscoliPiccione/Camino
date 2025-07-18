@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orsetto Puzzolone - Avventura nel Bosco</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 4px solid #8B4513;
+            border-radius: 15px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #87CEEB 0%, #90EE90 70%, #228B22 100%);
+        }
+        
+        canvas {
+            display: block;
+            background: transparent;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 20;
+        }
+        
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #ff5252;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div>🍯 Spuntini: <span id="score">0</span></div>
+            <div>✨ Magia: <span id="magic">0</span></div>
+            <div>💨 Potere Puzzetta: <span id="fartPower">1</span>x</div>
+        </div>
+        <div id="instructions">
+            SPAZIO = Puzzetta Magica per saltare | A/D = Corri | Raccogli spuntini ed evita ostacoli!
+        </div>
+        <div id="gameOver" class="game-over" style="display: none;">
+            <h2>Game Over!</h2>
+            <p>L'orsetto ha sbattuto contro un ostacolo!</p>
+            <p>Spuntini raccolti: <span id="finalScore">0</span></p>
+            <button onclick="restartGame()">Rigioca</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Variabili di gioco
+        let gameRunning = true;
+        let score = 0;
+        let magic = 0;
+        let fartPower = 1;
+        
+        // Player (orsetto)
+        const player = {
+            x: 100,
+            y: 400,
+            width: 40,
+            height: 40,
+            velocityY: 0,
+            onGround: false,
+            direction: 1 // 1 = destra, -1 = sinistra
+        };
+        
+        // Gravità e fisica
+        const gravity = 0.6;
+        const jumpStrength = -12;
+        const moveSpeed = 3;
+        const groundY = 500;
+        
+        // Array per oggetti del gioco
+        let obstacles = [];
+        let treats = [];
+        let particles = [];
+        let trees = [];
+        
+        // Input
+        const keys = {};
+        
+        // Inizializza gli alberi di sfondo
+        function initTrees() {
+            for (let i = 0; i < 15; i++) {
+                trees.push({
+                    x: Math.random() * 1200,
+                    y: groundY - Math.random() * 100 - 50,
+                    height: Math.random() * 80 + 60,
+                    width: Math.random() * 20 + 15
+                });
+            }
+        }
+        
+        // Genera ostacoli
+        function spawnObstacle() {
+            obstacles.push({
+                x: canvas.width + Math.random() * 200,
+                y: groundY - 30,
+                width: 30,
+                height: 30,
+                speed: 2 + Math.random() * 2
+            });
+        }
+        
+        // Genera spuntini
+        function spawnTreat() {
+            treats.push({
+                x: canvas.width + Math.random() * 300,
+                y: groundY - Math.random() * 150 - 50,
+                width: 20,
+                height: 20,
+                speed: 1.5 + Math.random(),
+                collected: false
+            });
+        }
+        
+        // Crea particelle per le puzzette
+        function createFartParticles() {
+            for (let i = 0; i < 8 * fartPower; i++) {
+                particles.push({
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height,
+                    velocityX: (Math.random() - 0.5) * 6,
+                    velocityY: Math.random() * 3 + 2,
+                    life: 30,
+                    maxLife: 30,
+                    size: Math.random() * 6 + 3
+                });
+            }
+        }
+        
+        // Disegna l'orsetto
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            if (player.direction === -1) ctx.scale(-1, 1);
+            
+            // Corpo
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(-15, -15, 30, 25);
+            
+            // Testa
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(-12, -25, 24, 20);
+            
+            // Orecchie
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(-15, -30, 8, 8);
+            ctx.fillRect(7, -30, 8, 8);
+            
+            // Occhi
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-8, -22, 3, 3);
+            ctx.fillRect(5, -22, 3, 3);
+            
+            // Naso
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-1, -16, 2, 2);
+            
+            // Zampe
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(-12, 8, 6, 8);
+            ctx.fillRect(6, 8, 6, 8);
+            
+            ctx.restore();
+        }
+        
+        // Disegna alberi
+        function drawTrees() {
+            trees.forEach(tree => {
+                // Tronco
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(tree.x - tree.width/2, tree.y, tree.width, tree.height);
+                
+                // Chioma
+                ctx.fillStyle = '#228B22';
+                ctx.beginPath();
+                ctx.arc(tree.x, tree.y, tree.width + 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Muovi albero
+                tree.x -= 0.5;
+                if (tree.x < -50) tree.x = canvas.width + 50;
+            });
+        }
+        
+        // Disegna ostacoli
+        function drawObstacles() {
+            obstacles.forEach((obstacle, index) => {
+                // Roccia/Cespuglio
+                ctx.fillStyle = '#696969';
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                
+                // Spine
+                ctx.fillStyle = '#2F4F2F';
+                for (let i = 0; i < 3; i++) {
+                    ctx.fillRect(obstacle.x + i * 10 + 5, obstacle.y - 5, 3, 8);
+                }
+                
+                obstacle.x -= obstacle.speed;
+                
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(index, 1);
+                }
+            });
+        }
+        
+        // Disegna spuntini
+        function drawTreats() {
+            treats.forEach((treat, index) => {
+                if (!treat.collected) {
+                    // Miele/Bacca
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(treat.x + treat.width/2, treat.y + treat.height/2, treat.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Luccichio
+                    ctx.fillStyle = '#FFF';
+                    ctx.fillRect(treat.x + 5, treat.y + 5, 3, 3);
+                }
+                
+                treat.x -= treat.speed;
+                
+                if (treat.x + treat.width < 0) {
+                    treats.splice(index, 1);
+                }
+            });
+        }
+        
+        // Disegna particelle
+        function drawParticles() {
+            particles.forEach((particle, index) => {
+                const alpha = particle.life / particle.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#FFB6C1';
+                
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+                ctx.fill();
+                
+                particle.x += particle.velocityX;
+                particle.y += particle.velocityY;
+                particle.life--;
+                
+                if (particle.life <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        // Controllo collisioni
+        function checkCollisions() {
+            obstacles.forEach(obstacle => {
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    gameOver();
+                }
+            });
+            
+            treats.forEach(treat => {
+                if (!treat.collected &&
+                    player.x < treat.x + treat.width &&
+                    player.x + player.width > treat.x &&
+                    player.y < treat.y + treat.height &&
+                    player.y + player.height > treat.y) {
+                    treat.collected = true;
+                    score += 10;
+                    magic += 1;
+                    
+                    // Aumenta il potere delle puzzette ogni 5 spuntini
+                    if (magic % 5 === 0) {
+                        fartPower = Math.min(fartPower + 1, 5);
+                    }
+                }
+            });
+        }
+        
+        // Aggiorna UI
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('magic').textContent = magic;
+            document.getElementById('fartPower').textContent = fartPower;
+        }
+        
+        // Game Over
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        // Riavvia gioco
+        function restartGame() {
+            gameRunning = true;
+            score = 0;
+            magic = 0;
+            fartPower = 1;
+            player.x = 100;
+            player.y = 400;
+            player.velocityY = 0;
+            obstacles = [];
+            treats = [];
+            particles = [];
+            document.getElementById('gameOver').style.display = 'none';
+        }
+        
+        // Loop principale del gioco
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Pulisci canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Movimento del giocatore
+            if (keys['KeyA'] || keys['ArrowLeft']) {
+                player.x -= moveSpeed;
+                player.direction = -1;
+            }
+            if (keys['KeyD'] || keys['ArrowRight']) {
+                player.x += moveSpeed;
+                player.direction = 1;
+            }
+            
+            // Limiti dello schermo
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            
+            // Fisica del salto
+            player.y += player.velocityY;
+            player.velocityY += gravity;
+            
+            // Controllo del terreno
+            if (player.y >= groundY - player.height) {
+                player.y = groundY - player.height;
+                player.velocityY = 0;
+                player.onGround = true;
+            } else {
+                player.onGround = false;
+            }
+            
+            // Disegna tutto
+            drawTrees();
+            drawPlayer();
+            drawObstacles();
+            drawTreats();
+            drawParticles();
+            
+            // Controlli e aggiornamenti
+            checkCollisions();
+            updateUI();
+            
+            // Spawn oggetti
+            if (Math.random() < 0.01) spawnObstacle();
+            if (Math.random() < 0.008) spawnTreat();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            
+            if (e.code === 'Space' && player.onGround) {
+                e.preventDefault();
+                player.velocityY = jumpStrength * fartPower * 0.8;
+                createFartParticles();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+        
+        // Inizializza e avvia il gioco
+        initTrees();
+        gameLoop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Orsetto Puzzolone - Stile Pitfall</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #00ff00;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            max-width: 100vw;
+            max-height: 100vh;
+            border: 3px solid #00ff00;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            background: #000;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        #bearDrawing {
+            width: 200px;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+        
+        #gameTitle {
+            color: #00ff00;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #instructions {
+            color: #00ff00;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        
+        #records {
+            color: #ffff00;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00ff00;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        #energy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ff0000;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 30px;
+            text-align: center;
+            z-index: 20;
+        }
+        
+        button {
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+            font-family: 'Courier New', monospace;
+            touch-action: manipulation;
+        }
+        
+        button:hover, button:active {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        @media (max-width: 850px) {
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+            }
+            #gameTitle { font-size: 24px; }
+            #instructions { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="startScreen">
+            <canvas id="bearDrawing" width="200" height="150"></canvas>
+            <div id="gameTitle">ORSETTO PUZZOLONE</div>
+            <div id="instructions">
+                🐻 L'orsetto corre nel bosco e deve evitare ostacoli saltando con le sue puzzette magiche!<br><br>
+                🎮 <strong>CONTROLLI:</strong><br>
+                • PC: Premi SPAZIO per saltare<br>
+                • Mobile: Tocca lo schermo per saltare<br><br>
+                🍰 <strong>OBIETTIVO:</strong><br>
+                • Raccogli dolci per aumentare il punteggio<br>
+                • Evita ostacoli (sassi, cespugli, puzzole, buche, ragni)<br>
+                • Ogni 3 dolci = puzzette più potenti = salti più alti<br>
+                • Ogni 10 dolci = +1 energia<br><br>
+                ❤️ <strong>ENERGIA:</strong> Hai 10 vite. Perdine una ad ogni ostacolo colpito!
+            </div>
+            <div id="records">
+                <div>🏆 RECORD DISTANZA: <span id="bestDistance">0</span>m</div>
+                <div>💎 RECORD PUNTI: <span id="bestScore">0</span></div>
+            </div>
+            <button onclick="startGame()">INIZIA GIOCO</button>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div>PUNTI: <span id="score">0</span></div>
+            <div>DOLCI: <span id="treats">0</span></div>
+            <div>POTENZA: <span id="power">1</span></div>
+            <div>DISTANZA: <span id="distance">0</span>m</div>
+        </div>
+        <div id="energy">
+            ENERGIA: <span id="energyValue">10</span>/10 ❤️
+        </div>
+        <div id="gameOver" class="game-over" style="display: none;">
+            <h2>GAME OVER</h2>
+            <p>PUNTEGGIO: <span id="finalScore">0</span></p>
+            <p>DISTANZA: <span id="finalDistance">0</span>m</p>
+            <div id="newRecord" style="display: none; color: #ffff00;">
+                🎉 NUOVO RECORD! 🎉
+            </div>
+            <button onclick="restartGame()">RIGIOCA</button>
+            <button onclick="showStartScreen()">MENU</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startCanvas = document.getElementById('bearDrawing');
+        const startCtx = startCanvas.getContext('2d');
+        
+        // Variabili di stato
+        let gameState = 'start';
+        let gameRunning = false;
+        
+        // Audio Context per suoni
+        let audioContext;
+        let backgroundMusicPlaying = false;
+        
+        // Dati salvati (senza localStorage)
+        let bestScore = 0;
+        let bestDistance = 0;
+        
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.warn('Audio non supportato');
+            }
+        }
+        
+        // Genera suono di peto più realistico 
+        function playFartSound(power) {
+            if (!audioContext) return;
+            
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Frequenze sovrapposte per effetto più realistico
+            oscillator1.frequency.setValueAtTime(80 + power * 15, audioContext.currentTime);
+            oscillator1.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.4);
+            
+            oscillator2.frequency.setValueAtTime(120 + power * 10, audioContext.currentTime);
+            oscillator2.frequency.exponentialRampToValueAtTime(60, audioContext.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            oscillator1.type = 'sawtooth';
+            oscillator2.type = 'square';
+            oscillator1.start();
+            oscillator2.start();
+            oscillator1.stop(audioContext.currentTime + 0.4);
+            oscillator2.stop(audioContext.currentTime + 0.3);
+        }
+        
+        // Musica di sottofondo più veloce
+        function playBackgroundMusic() {
+            if (!audioContext || backgroundMusicPlaying) return;
+            backgroundMusicPlaying = true;
+            
+            const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            let noteIndex = 0;
+            
+            function playNote() {
+                if (!gameRunning) {
+                    backgroundMusicPlaying = false;
+                    return;
+                }
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(notes[noteIndex], audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                
+                oscillator.type = 'square';
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+                
+                noteIndex = (noteIndex + 1) % notes.length;
+                setTimeout(playNote, 400);
+            }
+            
+            playNote();
+        }
+        
+        // Variabili di gioco
+        let score = 0;
+        let treatsCollected = 0;
+        let power = 1;
+        let gameSpeed = 2;
+        let distance = 0;
+        let energy = 10;
+        let fartCloud = [];
+        let gameFrame = 0;
+        
+        // Player (orsetto)
+        const player = {
+            x: 100,
+            y: 450,
+            width: 40,
+            height: 40,
+            velocityY: 0,
+            onGround: false,
+            invulnerable: 0
+        };
+        
+        // Costanti di gioco
+        const gravity = 0.5;
+        const jumpStrength = -13;
+        const groundY = 450;
+        
+        // Array per oggetti
+        let obstacles = [];
+        let treats = [];
+        let backgroundTrees = [];
+        
+        // Tipi di ostacoli
+        const obstacleTypes = [
+            { type: 'rock', width: 40, height: 40, color: '#666' },
+            { type: 'bush', width: 45, height: 35, color: '#228B22' },
+            { type: 'skunk', width: 35, height: 30, color: '#000' },
+            { type: 'hole', width: 60, height: 12, color: '#000' },
+            { type: 'spider', width: 30, height: 25, color: '#8B0000' }
+        ];
+        
+        // Tipi di dolci
+        const treatTypes = [
+            { type: 'cake', points: 50 },
+            { type: 'honey', points: 30 },
+            { type: 'ice', points: 40 },
+            { type: 'banana', points: 20 },
+            { type: 'pineapple', points: 60 },
+            { type: 'sorbet', points: 45 },
+            { type: 'coffee', points: 35 }
+        ];
+        
+        // Disegna l'orsetto della schermata iniziale
+        function drawStartBear() {
+            const ctx = startCtx;
+            ctx.clearRect(0, 0, 200, 150);
+            
+            // Corpo dell'orso
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(60, 60, 80, 60);
+            
+            // Testa
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(70, 20, 60, 50);
+            
+            // Orecchie
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(65, 15, 15, 15);
+            ctx.fillRect(120, 15, 15, 15);
+            
+            // Occhi
+            ctx.fillStyle = '#000';
+            ctx.fillRect(80, 35, 6, 6);
+            ctx.fillRect(114, 35, 6, 6);
+            
+            // Naso
+            ctx.fillRect(97, 50, 6, 4);
+            
+            // Bocca (sorriso)
+            ctx.fillRect(85, 58, 30, 2);
+            ctx.fillRect(85, 58, 2, 6);
+            ctx.fillRect(113, 58, 2, 6);
+            
+            // Zampe
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(70, 115, 12, 20);
+            ctx.fillRect(118, 115, 12, 20);
+            
+            // Torta in volo
+            ctx.fillStyle = '#FFB6C1';
+            ctx.fillRect(140, 40, 25, 20);
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(145, 35, 15, 8);
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(150, 32, 5, 5);
+            
+            // Nuvoletta verde del peto
+            ctx.fillStyle = '#90EE90';
+            ctx.globalAlpha = 0.7;
+            ctx.fillRect(50, 120, 20, 15);
+            ctx.fillRect(45, 125, 15, 10);
+            ctx.fillRect(35, 130, 12, 8);
+            ctx.globalAlpha = 1;
+            
+            // Sparkles
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(160, 25, 3, 3);
+            ctx.fillRect(170, 35, 3, 3);
+            ctx.fillRect(155, 50, 3, 3);
+        }
+        
+        // Carica i record salvati
+        function loadRecords() {
+            document.getElementById('bestScore').textContent = bestScore;
+            document.getElementById('bestDistance').textContent = bestDistance;
+        }
+        
+        // Salva i record
+        function saveRecords() {
+            let newRecord = false;
+            if (score > bestScore) {
+                bestScore = score;
+                newRecord = true;
+            }
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                newRecord = true;
+            }
+            return newRecord;
+        }
+        
+        // Mostra schermata iniziale
+        function showStartScreen() {
+            gameState = 'start';
+            gameRunning = false;
+            backgroundMusicPlaying = false;
+            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('gameOver').style.display = 'none';
+            loadRecords();
+            drawStartBear();
+        }
+        
+        // Inizia il gioco
+        function startGame() {
+            if (!audioContext) initAudio();
+            
+            gameState = 'playing';
+            gameRunning = true;
+            document.getElementById('startScreen').style.display = 'none';
+            resetGame();
+            playBackgroundMusic();
+            gameLoop();
+        }
+        
+        // Reset del gioco
+        function resetGame() {
+            score = 0;
+            treatsCollected = 0;
+            power = 1;
+            gameSpeed = 2;
+            distance = 0;
+            energy = 10;
+            gameFrame = 0;
+            player.x = 100;
+            player.y = groundY;
+            player.velocityY = 0;
+            player.invulnerable = 0;
+            player.onGround = true;
+            obstacles = [];
+            treats = [];
+            fartCloud = [];
+            initBackgroundTrees();
+            updateUI();
+        }
+        
+        // Riavvia il gioco
+        function restartGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            startGame();
+        }
+        
+        // Inizializza alberi di sfondo
+        function initBackgroundTrees() {
+            backgroundTrees = [];
+            for (let i = 0; i < 25; i++) {
+                backgroundTrees.push({
+                    x: Math.random() * 1200,
+                    y: groundY + 40,
+                    height: Math.random() * 80 + 50,
+                    width: Math.random() * 20 + 12
+                });
+            }
+        }
+        
+        // Genera ostacolo
+        function spawnObstacle() {
+            const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            obstacles.push({
+                ...obstacleType,
+                x: canvas.width + Math.random() * 150,
+                y: obstacleType.type === 'hole' ? groundY + 28 : groundY + 40 - obstacleType.height,
+                speed: gameSpeed
+            });
+        }
+        
+        // Genera dolce
+        function spawnTreat() {
+            const treatType = treatTypes[Math.floor(Math.random() * treatTypes.length)];
+            treats.push({
+                ...treatType,
+                x: canvas.width + Math.random() * 250,
+                y: groundY - Math.random() * 100 - 30,
+                width: 32,
+                height: 32,
+                speed: gameSpeed,
+                collected: false
+            });
+        }
+        
+        // Crea nuvoletta verde del peto
+        function createFartCloud() {
+            for (let i = 0; i < power * 3; i++) {
+                fartCloud.push({
+                    x: player.x + Math.random() * 20,
+                    y: player.y + player.height + Math.random() * 10,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 2 + 1,
+                    life: 40,
+                    maxLife: 40,
+                    size: Math.random() * 8 + 4
+                });
+            }
+        }
+        
+        // Salto del giocatore
+        function jump() {
+            if (player.onGround) {
+                player.velocityY = jumpStrength - (power - 1) * 2;
+                player.onGround = false;
+                createFartCloud();
+                playFartSound(power);
+            }
+        }
+        
+        // Controlli input
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && gameRunning) {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        // Touch controls
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        // Disegna terreno
+        function drawGround() {
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, groundY + 40, canvas.width, canvas.height - groundY - 40);
+            
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, groundY + 38, canvas.width, 4);
+            
+            ctx.fillStyle = '#654321';
+            for (let x = 0; x < canvas.width; x += 25) {
+                for (let y = groundY + 50; y < canvas.height; y += 20) {
+                    if ((x + y) % 50 === 0) {
+                        ctx.fillRect(x, y, 4, 4);
+                    }
+                }
+            }
+        }
+        
+        // Disegna alberi di sfondo
+        function drawBackgroundTrees() {
+            backgroundTrees.forEach(tree => {
+                ctx.fillStyle = '#4A4A4A';
+                ctx.fillRect(tree.x - tree.width/2, tree.y - tree.height, tree.width, tree.height);
+                
+                ctx.fillStyle = '#2F4F2F';
+                ctx.fillRect(tree.x - tree.width * 1.5, tree.y - tree.height - 20, tree.width * 3, 25);
+                
+                tree.x -= gameSpeed * 0.4;
+                if (tree.x < -40) tree.x = canvas.width + 40;
+            });
+        }
+        
+        // Disegna l'orsetto con effetto invulnerabilità
+        function drawPlayer() {
+            if (player.invulnerable > 0 && Math.floor(player.invulnerable / 5) % 2) return;
+            
+            const x = player.x;
+            const y = player.y;
+            
+            // Corpo
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x + 5, y + 10, 30, 25);
+            
+            // Testa
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(x + 8, y, 24, 20);
+            
+            // Orecchie
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x + 5, y - 3, 8, 8);
+            ctx.fillRect(x + 27, y - 3, 8, 8);
+            
+            // Occhi
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x + 12, y + 5, 3, 3);
+            ctx.fillRect(x + 25, y + 5, 3, 3);
+            
+            // Naso
+            ctx.fillRect(x + 18, y + 12, 3, 2);
+            
+            // Zampe
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(x + 10, y + 30, 6, 10);
+            ctx.fillRect(x + 24, y + 30, 6, 10);
+        }
+        
+        // Disegna nuvolette verdi del peto
+        function drawFartClouds() {
+            fartCloud.forEach((cloud, index) => {
+                const alpha = cloud.life / cloud.maxLife;
+                ctx.globalAlpha = alpha * 0.7;
+                ctx.fillStyle = '#90EE90';
+                
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size * alpha, 0, Math.PI * 2);
+                ctx.fill();
+                
+                cloud.x += cloud.vx;
+                cloud.y += cloud.vy;
+                cloud.life--;
+                
+                if (cloud.life <= 0) {
+                    fartCloud.splice(index, 1);
+                }
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        // Disegna ostacoli
+        function drawObstacles() {
+            obstacles.forEach((obstacle, index) => {
+                switch (obstacle.type) {
+                    case 'rock':
+                        ctx.fillStyle = '#666';
+                        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                        ctx.fillStyle = '#999';
+                        ctx.fillRect(obstacle.x + 3, obstacle.y + 3, obstacle.width - 10, obstacle.height - 10);
+                        break;
+                        
+                    case 'bush':
+                        ctx.fillStyle = '#228B22';
+                        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                        ctx.fillStyle = '#32CD32';
+                        for (let i = 0; i < 8; i++) {
+                            ctx.fillRect(obstacle.x + (i * 5), obstacle.y + Math.sin(i) * 3, 3, 6);
+                        }
+                        break;
+                        
+                    case 'skunk':
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                        ctx.fillStyle = '#FFF';
+                        ctx.fillRect(obstacle.x + 3, obstacle.y + 3, obstacle.width - 6, 6);
+                        break;
+                        
+                    case 'hole':
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                        break;
+                        
+                    case 'spider':
+                        ctx.fillStyle = '#8B0000';
+                        ctx.fillRect(obstacle.x + 8, obstacle.y + 6, 14, 14);
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(obstacle.x + 12, obstacle.y + 8, 2, 2);
+                        ctx.fillRect(obstacle.x + 16, obstacle.y + 8, 2, 2);
+                        break;
+                }
+                
+                obstacle.x -= obstacle.speed;
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(index, 1);
+                }
+            });
+        }
+        
+        // Disegna dolci
+        function drawTreats() {
+            treats.forEach((treat, index) => {
+                if (!treat.collected) {
+                    const x = treat.x;
+                    const y = treat.y;
+                    
+                    switch (treat.type) {
+                        case 'cake':
+                            ctx.fillStyle = '#FFB6C1';
+                            ctx.fillRect(x, y + 8, 32, 20);
+                            ctx.fillStyle = '#FFF';
+                            ctx.fillRect(x + 4, y + 4, 24, 8);
+                            ctx.fillStyle = '#FF0000';
+                            ctx.fillRect(x + 14, y, 4, 8);
+                            break;
+                            
+                        case 'honey':
+                            ctx.fillStyle = '#DAA520';
+                            ctx.fillRect(x + 4, y + 4, 24, 24);
+                            ctx.fillStyle = '#FFD700';
+                            ctx.fillRect(x + 6, y + 6, 20, 20);
+                            break;
+                            
+                        case 'ice':
+                            ctx.fillStyle = '#F0F8FF';
+                            ctx.fillRect(x + 8, y, 16, 20);
+                            ctx.fillStyle = '#FFB6C1';
+                            ctx.fillRect(x + 10, y + 2, 12, 16);
+                            break;
+                            
+                        case 'banana':
+                            ctx.fillStyle = '#FFFF00';
+                            ctx.fillRect(x + 6, y + 4, 20, 24);
+                            ctx.fillStyle = '#228B22';
+                            ctx.fillRect(x + 12, y, 8, 8);
+                            break;
+                            
+                        case 'pineapple':
+                            ctx.fillStyle = '#FFD700';
+                            ctx.fillRect(x + 4, y + 8, 24, 20);
+                            ctx.fillStyle = '#228B22';
+                            ctx.fillRect(x + 8, y, 16, 12);
+                            break;
+                            
+                        case 'sorbet':
+                            ctx.fillStyle = '#FF69B4';
+                            ctx.fillRect(x + 8, y, 16, 20);
+                            ctx.fillStyle = '#FFF';
+                            ctx.fillRect(x + 10, y + 2, 12, 16);
+                            break;
+                            
+                        case 'coffee':
+                            ctx.fillStyle = '#8B4513';
+                            ctx.fillRect(x + 4, y + 8, 24, 20);
+                            ctx.fillStyle = '#FFF';
+                            ctx.fillRect(x + 8, y + 12, 16, 4);
+                            break;
+                    }
+                    
+                    // Sparkle effect
+                    ctx.fillStyle = '#FFF';
+                    const sparkleX = x + (gameFrame / 5 + index) % 32;
+                    const sparkleY = y + Math.sin((gameFrame / 10 + index)) * 4 + 16;
+                    ctx.fillRect(sparkleX, sparkleY, 2, 2);
+                }
+                
+                treat.x -= treat.speed;
+                if (treat.x + treat.width < 0) {
+                    treats.splice(index, 1);
+                }
+            });
+        }
+        
+        // Controllo collisioni
+        function checkCollisions() {
+            // Collisioni con ostacoli
+            obstacles.forEach((obstacle, index) => {
+                if (player.invulnerable <= 0 &&
+                    player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    
+                    energy--;
+                    player.invulnerable = 120;
+                    
+                    if (energy <= 0) {
+                        gameOver();
+                    }
+                }
+            });
+            
+            // Collisioni con dolci
+            treats.forEach((treat, index) => {
+                if (!treat.collected &&
+                    player.x < treat.x + treat.width &&
+                    player.x + player.width > treat.x &&
+                    player.y 

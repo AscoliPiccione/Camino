@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Petorso Adventure</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #87CEEB, #98FB98);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #2F4F4F;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            max-width: 100vw;
+            max-height: 100vh;
+            border: 4px solid #2F4F4F;
+            border-radius: 15px;
+            background: #87CEEB;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            width: 100%;
+            height: 100%;
+            border-radius: 11px;
+        }
+        
+        #splashScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #FF69B4, #FFD700, #00CED1, #98FB98);
+            background-size: 400% 400%;
+            animation: rainbowBg 3s ease infinite;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 40;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 11px;
+        }
+        
+        @keyframes rainbowBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #splashArt {
+            width: 300px;
+            height: 200px;
+            margin-bottom: 20px;
+            border: 3px solid #FFF;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.9);
+        }
+        
+        #splashTitle {
+            color: #FFF;
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 3px 3px 0px #000;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        #splashSubtitle {
+            color: #FFF;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 11px;
+        }
+        
+        #bearDrawing {
+            width: 200px;
+            height: 150px;
+            margin-bottom: 20px;
+            border: 2px solid #2F4F4F;
+            border-radius: 10px;
+            background: #FFF;
+        }
+        
+        #gameTitle {
+            color: #2F4F4F;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 0px #FFF;
+        }
+        
+        #instructions {
+            color: #2F4F4F;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 600px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        #records {
+            color: #FF6347;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #2F4F4F;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        #energy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #FF0000;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            border: 3px solid #2F4F4F;
+            border-radius: 15px;
+            color: #2F4F4F;
+            padding: 30px;
+            text-align: center;
+            z-index: 20;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #FF69B4, #FFD700);
+            color: #FFF;
+            border: 3px solid #2F4F4F;
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            touch-action: manipulation;
+            text-shadow: 1px 1px 0px #000;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover, button:active {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        @media (max-width: 850px) {
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+                border-radius: 0;
+            }
+            canvas {
+                border-radius: 0;
+            }
+            #splashScreen, #startScreen {
+                border-radius: 0;
+            }
+            #splashTitle { font-size: 28px; }
+            #gameTitle { font-size: 24px; }
+            #instructions { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="splashScreen">
+            <canvas id="splashArt" width="300" height="200"></canvas>
+            <div id="splashTitle">PETORSO ADVENTURE</div>
+            <div id="splashSubtitle">L'Orsetto Volante delle Puzzette!</div>
+            <button onclick="showStartScreen()">CONTINUA</button>
+        </div>
+        
+        <div id="startScreen">
+            <canvas id="bearDrawing" width="200" height="150"></canvas>
+            <div id="gameTitle">PETORSO ADVENTURE</div>
+            <div id="instructions">
+                🐻 L'orsetto vola nel bosco con le sue puzzette magiche e deve evitare ostacoli!<br><br>
+                🎮 <strong>CONTROLLI:</strong><br>
+                • PC: Premi SPAZIO per volare più in alto<br>
+                • Mobile: Tocca lo schermo per volare più in alto<br><br>
+                🍰 <strong>OBIETTIVO:</strong><br>
+                • Raccogli dolci per aumentare il punteggio<br>
+                • Evita ostacoli (sassi, cespugli, puzzole, buche, ragni)<br>
+                • Ogni 3 dolci = puzzette più potenti = volo migliore<br>
+                • Ogni 10 dolci = +1 energia<br><br>
+                ❤️ <strong>ENERGIA:</strong> Hai 10 vite. Perdine una ad ogni ostacolo colpito!
+            </div>
+            <div id="records">
+                <div>🏆 RECORD DISTANZA: <span id="bestDistance">0</span>m</div>
+                <div>💎 RECORD PUNTI: <span id="bestScore">0</span></div>
+            </div>
+            <button onclick="startGame()">INIZIA GIOCO</button>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div>PUNTI: <span id="score">0</span></div>
+            <div>DOLCI: <span id="treats">0</span></div>
+            <div>POTENZA: <span id="power">1</span></div>
+            <div>DISTANZA: <span id="distance">0</span>m</div>
+        </div>
+        <div id="energy">
+            ENERGIA: <span id="energyValue">10</span>/10 ❤️
+        </div>
+        <div id="gameOver" class="game-over" style="display: none;">
+            <h2>GAME OVER</h2>
+            <p>PUNTEGGIO: <span id="finalScore">0</span></p>
+            <p>DISTANZA: <span id="finalDistance">0</span>m</p>
+            <div id="newRecord" style="display: none; color: #FFD700;">
+                🎉 NUOVO RECORD! 🎉
+            </div>
+            <button onclick="restartGame()">RIGIOCA</button>
+            <button onclick="showStartScreen()">MENU</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const splashCanvas = document.getElementById('splashArt');
+        const splashCtx = splashCanvas.getContext('2d');
+        const startCanvas = document.getElementById('bearDrawing');
+        const startCtx = startCanvas.getContext('2d');
+        
+        // Variabili di stato
+        let gameState = 'splash';
+        let gameRunning = false;
+        
+        // Audio Context per suoni
+        let audioContext;
+        let backgroundMusicPlaying = false;
+        let currentMelodyIndex = 0;
+        
+        // Dati salvati (senza localStorage)
+        let bestScore = 0;
+        let bestDistance = 0;
+        
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.warn('Audio non supportato');
+            }
+        }
+        
+        // Genera suono di peto più carino 
+        function playFartSound(power) {
+            if (!audioContext) return;
+            
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Suoni più musicali
+            oscillator1.frequency.setValueAtTime(200 + power * 50, audioContext.currentTime);
+            oscillator1.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+            
+            oscillator2.frequency.setValueAtTime(300 + power * 30, audioContext.currentTime);
+            oscillator2.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator1.type = 'sine';
+            oscillator2.type = 'triangle';
+            oscillator1.start();
+            oscillator2.start();
+            oscillator1.stop(audioContext.currentTime + 0.3);
+            oscillator2.stop(audioContext.currentTime + 0.2);
+        }
+        
+        // Musica stile Super Mario/Kirby
+        function playBackgroundMusic() {
+            if (!audioContext || backgroundMusicPlaying) return;
+            backgroundMusicPlaying = true;
+            
+            // Melodia allegra stile Nintendo
+            const melody = [
+                { note: 523.25, duration: 0.3 }, // C5
+                { note: 659.25, duration: 0.3 }, // E5
+                { note: 783.99, duration: 0.3 }, // G5
+                { note: 659.25, duration: 0.3 }, // E5
+                { note: 523.25, duration: 0.6 }, // C5
+                { note: 587.33, duration: 0.3 }, // D5
+                { note: 659.25, duration: 0.3 }, // E5
+                { note: 698.46, duration: 0.6 }, // F5
+                { note: 659.25, duration: 0.3 }, // E5
+                { note: 587.33, duration: 0.3 }, // D5
+                { note: 523.25, duration: 0.6 }, // C5
+                { note: 783.99, duration: 0.3 }, // G5
+                { note: 880.00, duration: 0.3 }, // A5
+                { note: 783.99, duration: 0.3 }, // G5
+                { note: 659.25, duration: 0.9 }  // E5
+            ];
+            
+            function playNote() {
+                if (!gameRunning) {
+                    backgroundMusicPlaying = false;
+                    currentMelodyIndex = 0;
+                    return;
+                }
+                
+                const currentNote = melody[currentMelodyIndex];
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(currentNote.note, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + currentNote.duration);
+                
+                oscillator.type = 'square';
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + currentNote.duration);
+                
+                currentMelodyIndex = (currentMelodyIndex + 1) % melody.length;
+                setTimeout(playNote, currentNote.duration * 1000);
+            }
+            
+            playNote();
+        }
+        
+        // Variabili di gioco
+        let score = 0;
+        let treatsCollected = 0;
+        let power = 1;
+        let gameSpeed = 2;
+        let distance = 0;
+        let energy = 10;
+        let fartCloud = [];
+        let gameFrame = 0;
+        
+        // Player (orsetto)
+        const player = {
+            x: 100,
+            y: 300,
+            width: 40,
+            height: 40,
+            velocityY: 0,
+            invulnerable: 0
+        };
+        
+        // Costanti di gioco
+        const gravity = 0.3;
+        const liftForce = -0.8;
+        const maxVelocity = 8;
+        
+        // Array per oggetti
+        let obstacles = [];
+        let treats = [];
+        let backgroundClouds = [];
+        
+        // Tipi di ostacoli
+        const obstacleTypes = [
+            { type: 'rock', width: 40, height: 40, color: '#666' },
+            { type: 'bush', width: 45, height: 35, color: '#228B22' },
+            { type: 'skunk', width: 35, height: 30, color: '#000' },
+            { type: 'hole', width: 60, height: 12, color: '#000' },
+            { type: 'spider', width: 30, height: 25, color: '#8B0000' }
+        ];
+        
+        // Tipi di dolci
+        const treatTypes = [
+            { type: 'cake', points: 50 },
+            { type: 'honey', points: 30 },
+            { type: 'ice', points: 40 },
+            { type: 'banana', points: 20 },
+            { type: 'pineapple', points: 60 },
+            { type: 'sorbet', points: 45 },
+            { type: 'coffee', points: 35 }
+        ];
+        
+        // Disegna l'illustrazione splash screen
+        function drawSplashArt() {
+            const ctx = splashCtx;
+            ctx.clearRect(0, 0, 300, 200);
+            
+            // Sfondo cielo
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 300, 200);
+            
+            // Nuvole di sfondo
+            ctx.fillStyle = '#FFF';
+            ctx.globalAlpha = 0.8;
+            ctx.fillRect(20, 20, 40, 20);
+            ctx.fillRect(200, 30, 50, 25);
+            ctx.fillRect(100, 15, 35, 18);
+            ctx.globalAlpha = 1;
+            
+            // Orsetto volante (più grande)
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(120, 80, 60, 45); // Corpo
+            
+            // Testa
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(125, 50, 50, 35);
+            
+            // Orecchie
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(120, 45, 15, 15);
+            ctx.fillRect(165, 45, 15, 15);
+            
+            // Occhi felici
+            ctx.fillStyle = '#000';
+            ctx.fillRect(135, 60, 4, 4);
+            ctx.fillRect(155, 60, 4, 4);
+            
+            // Bocca sorridente
+            ctx.fillRect(140, 75, 20, 2);
+            ctx.fillRect(138, 73, 2, 4);
+            ctx.fillRect(160, 73, 2, 4);
+            
+            // Zampe
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(130, 120, 10, 15);
+            ctx.fillRect(160, 120, 10, 15);
+            
+            // Torta che mangia
+            ctx.fillStyle = '#FFB6C1';
+            ctx.fillRect(180, 60, 30, 25);
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(185, 55, 20, 10);
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(192, 50, 6, 8);
+            
+            // Linee di movimento
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(195, 65, 15, 2);
+            ctx.fillRect(200, 70, 12, 2);
+            ctx.fillRect(198, 75, 10, 2);
+            
+            // Grandi nuvolette verdi del peto (propulsione)
+            ctx.fillStyle = '#90EE90';
+            ctx.globalAlpha = 0.7;
+            ctx.fillRect(80, 100, 30, 20);
+            ctx.fillRect(70, 110, 25, 15);
+            ctx.fillRect(60, 120, 20, 12);
+            ctx.fillRect(50, 130, 15, 10);
+            
+            // Sparkles magici
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(210, 40, 4, 4);
+            ctx.fillRect(220, 60, 4, 4);
+            ctx.fillRect(230, 50, 4, 4);
+            ctx.fillRect(240, 70, 4, 4);
+            
+            // Stelle scintillanti
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(250, 80, 3, 3);
+            ctx.fillRect(260, 90, 3, 3);
+            ctx.fillRect(270, 100, 3, 3);
+        }
+        
+        // Disegna l'orsetto della schermata di gioco
+        function drawStartBear() {
+            const ctx = startCtx;
+            ctx.clearRect(0, 0, 200, 150);
+            
+            // Sfondo
+            const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 200, 150);
+            
+            // Corpo dell'orso
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(60, 60, 80, 60);
+            
+            // Testa
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(70, 20, 60, 50);
+            
+            // Orecchie
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(65, 15, 15, 15);
+            ctx.fillRect(120, 15, 15, 15);
+            
+            // Occhi
+            ctx.fillStyle = '#000';
+            ctx.fillRect(80, 35, 6, 6);
+            ctx.fillRect(114, 35, 6, 6);
+            
+            // Naso
+            ctx.fillRect(97, 50, 6, 4);
+            
+            // Bocca (sorriso)
+            ctx.fillRect(85, 58, 30, 2);
+            ctx.fillRect(85, 58, 2, 6);
+            ctx.fillRect(113, 58, 2, 6);
+            
+            // Zampe
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(70, 115, 12, 20);
+            ctx.fillRect(118, 115, 12, 20);
+            
+            // Torta in volo
+            ctx.fillStyle = '#FFB6C1';
+            ctx.fillRect(140, 40, 25, 20);
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(145, 35, 15, 8);
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(150, 32, 5, 5);
+            
+            // Nuvoletta verde del peto
+            ctx.fillStyle = '#90EE90';
+            ctx.globalAlpha = 0.7;
+            ctx.fillRect(50, 120, 20, 15);
+            ctx.fillRect(45, 125, 15, 10);
+            ctx.fillRect(35, 130, 12, 8);
+            ctx.globalAlpha = 1;
+            
+            // Sparkles
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(160, 25, 3, 3);
+            ctx.fillRect(170, 35, 3, 3);
+            ctx.fillRect(155, 50, 3, 3);
+        }
+        
+        // Carica i record salvati
+        function loadRecords() {
+            document.getElementById('bestScore').textContent = bestScore;
+            document.getElementById('bestDistance').textContent = bestDistance;
+        }
+        
+        // Salva i record
+        function saveRecords() {
+            let newRecord = false;
+            if (score > bestScore) {
+                bestScore = score;
+                newRecord = true;
+            }
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                newRecord = true;
+            }
+            return newRecord;
+        }
+        
+        // Mostra schermata di avvio
+        function showStartScreen() {
+            gameState = 'start';
+            gameRunning = false;
+            backgroundMusicPlaying = false;
+            document.getElementById('splashScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('gameOver').style.display = 'none';
+            loadRecords();
+            drawStartBear();
+        }
+        
+        // Inizia il gioco
+        function startGame() {
+            if (!audioContext) initAudio();
+            
+            gameState = 'playing';
+            gameRunning = true;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('splashScreen').style.display = 'none';
+            resetGame();
+            playBackgroundMusic();
+            gameLoop();
+        }
+        
+        // Reset del gioco
+        function resetGame() {
+            score = 0;
+            treatsCollected = 0;
+            power = 1;
+            gameSpeed = 2;
+            distance = 0;
+            energy = 10;
+            gameFrame = 0;
+            player.x = 100;
+            player.y = 300;
+            player.velocityY = 0;
+            player.invulnerable = 0;
+            obstacles = [];
+            treats = [];
+            fartCloud = [];
+            initBackgroundClouds();
+            updateUI();
+        }
+        
+        // Riavvia il gioco
+        function restartGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            startGame();
+        }
+        
+        // Game Over
+        function gameOver() {
+            gameRunning = false;
+            backgroundMusicPlaying = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalDistance').textContent = distance;
+            
+            if (saveRecords()) {
+                document.getElementById('newRecord').style.display = 'block';
+            } else {
+                document.getElementById('newRecord').style.display = 'none';
+            }
+            
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        // Inizializza nuvole di sfondo
+        function initBackgroundClouds() {
+            backgroundClouds = [];
+            for (let i = 0; i < 15; i++) {
+                backgroundClouds.push({
+                    x: Math.random() * 1200,
+                    y: Math.random() * 400 + 50,
+                    width: Math.random() * 60 + 40,
+                    height: Math.random() * 30 + 20,
+                    speed: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+        
+        // Genera ostacolo
+        function spawnObstacle() {
+            const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            obstacles.push({
+                ...obstacleType,
+                x: canvas.width + Math.random() * 150,
+                y: Math.random() * (canvas.height - 100) + 50,
+                speed: gameSpeed
+            });
+        }
+        
+        // Genera dolce
+        function spawnTreat() {
+            const treatType = treatTypes[Math.floor(Math.random() * treatTypes.length)];
+            treats.push({
+                ...treatType,
+                x: canvas.width + Math.random() * 250,
+                y: Math.random() * (canvas.height - 150) + 75,
+                width: 32,
+                height: 32,
+                speed: gameSpeed,
+                collected: false
+            });
+        }
+        
+        // Crea nuvoletta verde del peto
+        function createFartCloud() {
+            for (let i = 0; i < power * 2; i++) {
+                fartCloud.push({
+                    x: player.x - Math.random() * 10,
+                    y: player.y + player.height/2 + Math.random() * 20 - 10,
+                    vx: -(Math.random() * 3 + 1),
+                    vy: (Math.random() - 0.5) * 2,
+                    life: 50,
+                    maxLife: 50,
+                    size: Math.random() * 12 + 6
+                });
+            }
+        }
+        
+        // Input del giocatore (volo continuo)
+        let flying = false;
+        
+        function startFlying() {
+            flying = true;
+        }
+        
+        function stopFlying() {
+            flying = false;
+        }
+        
+        // Controlli input
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && gameRunning) {
+                e.preventDefault();
+                startFlying();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && gameRunning) {
+                e.preventDefault();
+                stopFlying();
+            }
+        });
+        
+        // Touch controls
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+                startFlying();
+            }
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
