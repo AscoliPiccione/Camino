@@ -315,6 +315,42 @@
             border-radius: 2px;
         }
 
+        .shell {
+            width: 30px;
+            height: 25px;
+            background: linear-gradient(45deg, #F0E68C 0%, #DEB887 50%, #D2691E 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+        }
+
+        .shell:before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 24px;
+            height: 18px;
+            background: repeating-linear-gradient(
+                45deg,
+                #CD853F 0px,
+                #CD853F 2px,
+                #F4A460 2px,
+                #F4A460 4px
+            );
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        }
+
+        .shell:after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            width: 6px;
+            height: 8px;
+            background: #8B4513;
+            border-radius: 50%;
+        }
+
         .seagull {
             width: 28px;
             height: 20px;
@@ -392,7 +428,7 @@
                 line-height: 5px;
             }
             
-            .bush, .rock, .backpack, .seagull {
+            .bush, .rock, .backpack, .shell, .seagull {
                 transform: scale(0.8);
             }
         }
@@ -438,23 +474,26 @@
             <div class="tower"></div>
             
             <div class="buttons">
-    <a class="btn" href="navigator-semplice.htm">
-        <div class="bush"></div>
-        <div class="btn-label">Navigator</div>
-    </a>
-    <a class="btn" href="navigator-ai.htm">
-        <div class="rock"></div>
-        <div class="btn-label">Navigator Gemini</div>
-    </a>
-    <a class="btn" href="cami.htm">
-        <div class="backpack"></div>
-        <div class="btn-label">Semplice</div>
-    </a>
-    <a class="btn" href="CaminoNavigator.html">
-        <div class="seagull"></div>
-        <div class="btn-label">Versone vecchia</div>
-    </a>
-
+                <a class="btn" href="navigator-semplice.htm">
+                    <div class="bush"></div>
+                    <div class="btn-label">Navigator</div>
+                </a>
+                <a class="btn" href="navigator-ai.htm">
+                    <div class="rock"></div>
+                    <div class="btn-label">Navigator Gemini</div>
+                </a>
+                <a class="btn" href="cami.htm">
+                    <div class="backpack"></div>
+                    <div class="btn-label">Semplice</div>
+                </a>
+                <a class="btn" href="giochi.html">
+                    <div class="shell"></div>
+                    <div class="btn-label">Giochi</div>
+                </a>
+                <a class="btn" href="CaminoNavigator.html">
+                    <div class="seagull"></div>
+                    <div class="btn-label">Versone vecchia</div>
+                </a>
             </div>
         </div>
     </div>
