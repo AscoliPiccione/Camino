@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guida Interattiva alla Via degli Dei</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfaf6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 0.65rem auto;
+        }
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details > summary::after {
+            content: '+';
+            float: right;
+            font-size: 1.5em;
+            font-weight: bold;
+            line-height: 1;
+            margin-top: -4px;
+            transition: transform 0.2s;
+        }
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-orange-900">Via degli Dei</h1>
+            <p class="text-gray-600 hidden sm:block">La tua guida interattiva</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Sezione Treni a scomparsa -->
+        <section id="treni" class="mb-12">
+            <details class="card p-6">
+                <summary class="text-2xl font-bold text-gray-700 flex items-center cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-orange-500"><path d="M16 18.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm-10 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"/><path d="M2 9.5h10"/><path d="m14 9.5.1-1.1c.1-1.2.9-2.2 2-2.4l3.9-.6"/><path d="M5 9.5V5a2 2 0 0 1 2-2h3"/><path d="M12 9.5V5a2 2 0 0 0-2-2H7"/><path d="M22 14h-2.5c-1.1 0-2-.9-2-2V7.5"/></svg>
+                    Orari dei Treni (Mostra/Nascondi)
+                </summary>
+                <div class="grid md:grid-cols-2 gap-8 mt-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-xl mb-4">Andata: Verona → Bologna (Mattina)</h3>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>03:18 - 04:53</strong> | Trenitalia Regionale</p>
+                            <p><strong>04:05 - 05:39</strong> | Trenitalia Regionale</p>
+                            <p><strong>04:52 - 05:44</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>05:22 - 06:14</strong> | Italo</p>
+                            <p><strong>05:53 - 06:44</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>06:22 - 07:14</strong> | Italo</p>
+                            <p><strong>07:22 - 08:14</strong> | Italo</p>
+                            <p><strong>07:53 - 08:44</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>08:22 - 09:14</strong> | Italo</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-xl mb-4">Ritorno: Firenze → Verona (Sera)</h3>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>17:36 - 19:08</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>18:36 - 20:08</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>19:05 - 20:38</strong> | Italo</p>
+                            <p><strong>19:36 - 21:08</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>20:05 - 21:38</strong> | Italo</p>
+                            <p><strong>20:36 - 22:08</strong> | Trenitalia Frecciarossa</p>
+                            <p><strong>21:05 - 22:38</strong> | Italo</p>
+                            <p><strong>22:05 - 23:38</strong> | Italo</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- Sezione Interattiva Tappe -->
+        <section id="tappe">
+            <h2 class="text-3xl font-bold mb-6 text-gray-700 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-orange-500"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/><path d="M12 12v6"/><path d="M12 12H6"/><path d="M12 12h6"/></svg>
+                Esplora le Tappe
+            </h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                <div class="grid sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="numero-tappe" class="block text-sm font-medium text-gray-700 mb-2">1. Scegli il numero di tappe:</label>
+                        <select id="numero-tappe" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">Seleziona...</option>
+                            <option value="3">3 Tappe</option>
+                            <option value="4">4 Tappe</option>
+                            <option value="5">5 Tappe</option>
+                            <option value="6">6 Tappe</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="seleziona-localita" class="block text-sm font-medium text-gray-700 mb-2">2. Seleziona la località di arrivo:</label>
+                        <select id="seleziona-localita" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" disabled>
+                            <option>Prima scegli il numero di tappe</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenitore per le informazioni della tappa -->
+            <div id="info-tappa-container">
+                <!-- I dati verranno inseriti qui da JavaScript -->
+            </div>
+        </section>
+    </main>
+    
+    <footer class="text-center py-6 mt-12 border-t border-gray-200">
+        <p class="text-gray-500">Buon cammino sulla Via degli Dei!</p>
+    </footer>
+
+    <script>
+        // --- DATABASE DELLE INFORMAZIONI ---
+        const viaDegliDeiData = {
+            tappe: {
+                '3': ['Madonna dei Fornelli', 'San Piero a Sieve', 'Firenze'],
+                '4': ['Badolo', 'Madonna dei Fornelli', 'San Piero a Sieve', 'Firenze'],
+                '5': ['Badolo', 'Madonna dei Fornelli', 'Monte di Fo\'', 'San Piero a Sieve', 'Firenze'],
+                '6': ['Sasso Marconi', 'Monzuno', 'Madonna dei Fornelli', 'Monte di Fo\'', 'San Piero a Sieve', 'Firenze']
+            },
+            localita: {
+                'Sasso Marconi': {
+                    alloggi: [
+                        { nome: "B&B Ca' de Taruffi", tipo: "B&B", prezzo: "€€", contatti: "info@cadetaruffi.com | +39 339 4850720" },
+                        { nome: "Agriturismo Rio Verde", tipo: "Agriturismo", prezzo: "€€€", contatti: "info@agriturismorioverde.it | +39 051 6752513" },
+                        { nome: "B&B Rio Conco", tipo: "B&B", prezzo: "€€", contatti: "rioconco@gmail.com | +39 334 1434529" }
+                    ],
+                    servizi: [
+                        { nome: "Supermercato Coop", tipo: "Supermercato", indirizzo: "Via Porrettana, 362" },
+                        { nome: "Forno Pasticceria Fratelli Lelli", tipo: "Forno", indirizzo: "Piazza dei Martiri della Liberazione, 5" },
+                        { nome: "Bar Pasticceria Gelateria Kennedy", tipo: "Bar/Pasticceria", indirizzo: "Viale Kennedy, 28" }
+                    ],
+                    acqua: "Diverse fontanelle nel centro di Sasso Marconi. Assicurarsi di riempire le borracce prima di ripartire verso Monzuno."
+                },
+                'Badolo': {
+                    alloggi: [
+                        { nome: "B&B Nova Arbora", tipo: "B&B", prezzo: "€€", contatti: "info@novarbora.com | +39 051 847581" },
+                        { nome: "Agriturismo Piccola Raieda", tipo: "Agriturismo", prezzo: "€€€", contatti: "info@piccolaraieda.it | +39 320 0373362" },
+                        { nome: "B&B Sulla Via degli Dei", tipo: "B&B", prezzo: "€€", contatti: "attibuszecca@libero.it | +39 340 3807128" }
+                    ],
+                    servizi: [
+                        { nome: "Antica Hostaria Rocca di Badolo", tipo: "Bar/Ristorante", indirizzo: "Via Brento, 4" },
+                        { nome: "Vecchia Trattoria Monte Adone", tipo: "Ristorante", indirizzo: "Loc. Brento, Via Castellazzo 4/A" }
+                    ],
+                    acqua: "C'è una fontanella vicino alla chiesa di Badolo. È una delle poche fonti sicure prima di affrontare la salita verso Monte Adone."
+                },
+                'Monzuno': {
+                    alloggi: [
+                        { nome: "RB Ostello degli Dei", tipo: "Ostello", prezzo: "€", contatti: "info@ostellodeglidei.it | +39 338 1266210" },
+                        { nome: "B&B Monzuno - Sulla Via degli Dei", tipo: "B&B", prezzo: "€€", contatti: "monzuno22@gmail.com | +39 333 9117274" },
+                        { nome: "Agriturismo La Torre", tipo: "Agriturismo", prezzo: "€€€", contatti: "+39 051 677 1100" }
+                    ],
+                    servizi: [
+                        { nome: "Supermercato Despar", tipo: "Supermercato", indirizzo: "Via Provinciale, 52/A" },
+                        { nome: "Forno Artigiano Monzuno", tipo: "Forno", indirizzo: "Via G. Marconi, 10" },
+                        { nome: "Bar Posta", tipo: "Bar", indirizzo: "Piazza XXIV Maggio, 2/A" }
+                    ],
+                    acqua: "Fontanelle presenti in paese. Ottimo punto per fare il pieno d'acqua prima della tappa successiva."
+                },
+                'Madonna dei Fornelli': {
+                    alloggi: [
+                        { nome: "Albergo Ristorante Poli", tipo: "Albergo", prezzo: "€€", contatti: "info@albergoristorantepoli.it | +39 0534 94114" },
+                        { nome: "B&B Romani", tipo: "B&B", prezzo: "€€", contatti: "bebromani@libero.it | +39 327 7763868" },
+                        { nome: "Agriturismo L'Ostello dal Poeta", tipo: "Agriturismo", prezzo: "€€", contatti: "info@agriturismodalpoeta.com | +39 0534 94354" }
+                    ],
+                    servizi: [
+                        { nome: "Alimentari Venturi Doriano", tipo: "Alimentari", indirizzo: "Via del Lago, 11" },
+                        { nome: "Appennino Gnam", tipo: "Alimentari/Prodotti tipici", indirizzo: "Piazza Madonna della Neve, 5/a" },
+                    ],
+                    acqua: "ATTENZIONE: Il tratto dopo Madonna dei Fornelli verso il Passo della Futa è il più povero d'acqua di tutto il cammino. Partire con almeno 2 litri a testa."
+                },
+                'Monte di Fo\'': {
+                    alloggi: [
+                        { nome: "Camping il Sergente", tipo: "Campeggio/Bungalow", prezzo: "€", contatti: "info@campingilsergente.it | +39 328 9851849" },
+                        { nome: "B&B Podere Belvedere", tipo: "B&B", prezzo: "€€€", contatti: "info@belvederedimugello.it | +39 333 4878839" },
+                        { nome: "Albergo Ristorante Gualtieri", tipo: "Albergo", prezzo: "€€", contatti: "albergogualtieri@hotmail.it | +39 055 8423163" }
+                    ],
+                    servizi: [
+                        { nome: "Bar e Ristorante Il Sergente", tipo: "Bar/Ristorante", indirizzo: "Via Santa Lucia, 26" },
+                        { nome: "Bar Albergo Gli Orzali (Passo Futa)", tipo: "Bar/Ristorante", indirizzo: "Via Contessalina, 991" }
+                    ],
+                    acqua: "Le strutture ricettive sono il punto principale per rifornirsi. C'è una fonte al Passo della Futa, ma è bene verificare che sia attiva."
+                },
+                'San Piero a Sieve': {
+                    alloggi: [
+                        { nome: "Mugello Hostel", tipo: "Ostello", prezzo: "€", contatti: "prenotazioni@mugellohostel.it | +39 331 7346566" },
+                        { nome: "La Stazione per Dormire", tipo: "Affittacamere", prezzo: "€€", contatti: "lastazioneperdormire@gmail.com | +39 392 7045729" },
+                        { nome: "Affittacamere Sulla Via degli Dei", tipo: "Affittacamere", prezzo: "€€", contatti: "affittacamereviadeglidei@gmail.com - 338 5006348 Giulia" },
+                        { nome: "Hotel Ebe", tipo: "Hotel", prezzo: "€€€", contatti: "+39 055 848019" }
+                    ],
+                    servizi: [
+                        { nome: "CRAI Supermercato", tipo: "Supermercato", indirizzo: "Via Provinciale, 1" },
+                        { nome: "Pasticceria Bar Marcello", tipo: "Pasticceria/Bar", indirizzo: "Via Provinciale, 53" },
+                        { nome: "Forno Conti", tipo: "Forno", indirizzo: "Via Provinciale, 42" }
+                    ],
+                    acqua: "San Piero a Sieve è ricca di fontanelle pubbliche. Un'ottima occasione per riempire le borracce prima dell'ultima, impegnativa tappa verso Firenze."
+                },
+                 'Firenze': {
+                    alloggi: [
+                        { nome: "Plus Florence", tipo: "Ostello", prezzo: "€€", contatti: "Info su portali di booking" },
+                        { nome: "YellowSquare Florence", tipo: "Ostello", prezzo: "€€", contatti: "Info su portali di booking" },
+                        { nome: "Archie's House Hostel", tipo: "Ostello", prezzo: "€", contatti: "Info su portali di booking" }
+                    ],
+                    servizi: [
+                        { nome: "Mercato Centrale", tipo: "Mercato/Food Court", indirizzo: "Piazza del Mercato Centrale" },
+                        { nome: "Trattoria Mario", tipo: "Ristorante tipico", indirizzo: "Via Rosina, 2/r" },
+                        { nome: "All'Antico Vinaio", tipo: "Schiacciate", indirizzo: "Via dei Neri, 74/R" }
+                    ],
+                    acqua: "Firenze è piena di fontanelle storiche, chiamate 'fontanelli', che erogano acqua fresca e potabile."
+                }
+            }
+        };
+
+        // --- LOGICA DELL'APPLICAZIONE ---
+        const numeroTappeSelect = document.getElementById('numero-tappe');
+        const localitaSelect = document.getElementById('seleziona-localita');
+        const infoContainer = document.getElementById('info-tappa-container');
+
+        numeroTappeSelect.addEventListener('change', (e) => {
+            const numTappe = e.target.value;
+            localitaSelect.innerHTML = ''; 
+            infoContainer.innerHTML = ''; 
+
+            if (numTappe) {
+                localitaSelect.disabled = false;
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = 'Seleziona una località...';
+                defaultOption.value = '';
+                localitaSelect.appendChild(defaultOption);
+
+                const tappe = viaDegliDeiData.tappe[numTappe];
+                tappe.forEach(tappa => {
+                    const option = document.createElement('option');
+                    option.value = tappa;
+                    option.textContent = tappa;
+                    localitaSelect.appendChild(option);
+                });
+            } else {
+                localitaSelect.disabled = true;
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = 'Prima scegli il numero di tappe';
+                localitaSelect.appendChild(defaultOption);
+            }
+        });
+
+        localitaSelect.addEventListener('change', (e) => {
+            const localita = e.target.value;
+            infoContainer.innerHTML = ''; 
+
+            if (localita && viaDegliDeiData.localita[localita]) {
+                const data = viaDegliDeiData.localita[localita];
+                const contentHTML = `
+                    <div class="card p-6 md:p-8 animate-fade-in">
+                        <h3 class="text-2xl font-bold mb-6 text-orange-800">${localita}</h3>
+                        
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <!-- Alloggi -->
+                            <div class="lg:col-span-1">
+                                <h4 class="font-bold text-lg mb-3">Dove Dormire</h4>
+                                <div class="space-y-4">
+                                    ${data.alloggi.map(item => `
+                                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p class="font-semibold">${item.nome} <span class="text-xs font-normal text-gray-500 ml-1">(${item.tipo} - ${item.prezzo})</span></p>
+                                            <p class="text-sm text-gray-600">${item.contatti}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Servizi -->
+                            <div class="lg:col-span-1">
+                                <h4 class="font-bold text-lg mb-3">Cibo e Servizi</h4>
+                                <div class="space-y-4">
+                                     ${data.servizi.map(item => `
+                                        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p class="font-semibold">${item.nome} <span class="text-xs font-normal text-gray-500 ml-1">(${item.tipo})</span></p>
+                                            <p class="text-sm text-gray-600">${item.indirizzo}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Acqua -->
+                            <div class="lg:col-span-1">
+                                <h4 class="font-bold text-lg mb-3">Punti Acqua</h4>
+                                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg h-full">
+                                    <p class="text-sm text-blue-800">${data.acqua}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                infoContainer.innerHTML = contentHTML;
+            }
+        });
+
+        // Aggiungi una piccola animazione per l'ingresso delle card
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes animate-fade-in {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in {
+                animation: animate-fade-in 0.5s ease-out forwards;
+            }
+        `;
+        document.head.appendChild(style);
+
+    </script>
+</body>
+</html>
