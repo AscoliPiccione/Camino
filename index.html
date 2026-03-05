@@ -246,7 +246,7 @@
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'it-IT';
-                const safety = setTimeout(resolve, 2000);
+                const safety = setTimeout(resolve, 3000); // Timeout leggermente più lungo per frasi lente
                 utterance.onend = () => { clearTimeout(safety); resolve(); };
                 utterance.onerror = () => { clearTimeout(safety); resolve(); }; 
                 window.speechSynthesis.speak(utterance);
@@ -269,6 +269,10 @@
 
             anchor.addEventListener('click', async () => {
                 initAudio();
+                
+                // Sblocca la voce su iPhone immediatamente al click
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+
                 statusMsg.innerText = "Suonando...";
                 statusMsg.style.opacity = '1';
                 playBellSound(659.25, 0, 1.2); 
