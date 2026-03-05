@@ -71,13 +71,13 @@
 
         .bell-grid {
             display: grid;
-            grid-template-columns: 1fr; /* Colonna singola su mobile */
+            grid-template-columns: 1fr;
             gap: 1rem;
         }
 
         @media (min-width: 640px) {
             .bell-grid {
-                grid-template-columns: repeat(2, 1fr); /* Due colonne su desktop */
+                grid-template-columns: repeat(2, 1fr);
                 gap: 1.5rem;
             }
         }
@@ -93,7 +93,7 @@
             transition: all 0.2s;
             text-decoration: none;
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu su mobile */
+            -webkit-tap-highlight-color: transparent;
         }
 
         .bell-item:hover {
@@ -180,7 +180,6 @@
     <div id="status-msg">In attesa...</div>
 
     <script>
-        // Configurazione Pulsanti
         const bellsData = [
             { name: "Camino Navigator", link: "caminoindex.html" },
             { name: "Reparto Carote", link: "#" },
@@ -215,7 +214,6 @@
             }
         }
 
-        // Suono meccanico Dlin Dlon
         function playBellSound(freq, start, duration) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -229,7 +227,6 @@
             osc.stop(audioCtx.currentTime + start + duration);
         }
 
-        // Suono Buzzer Bzzzz (Apriporta)
         function playBuzzer(duration) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -244,18 +241,15 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // Funzione per riprodurre audio (voce femminile Google) e attendere la fine
         function playVoice(text) {
             return new Promise((resolve) => {
-                // Forziamo la voce femminile aggiungendo parametri che aiutano la selezione del motore TTS
-                const url = "https://translate.google.com/translate_tts?ie=UTF-8&tl=it&total=1&idx=0&textlen=50&client=tw-ob&q=" + encodeURIComponent(text);
-                const audio = new Audio(url);
-                audio.onended = resolve;
-                audio.onerror = resolve; 
-                audio.play().catch(e => {
-                    console.log("Errore audio:", e);
-                    resolve();
-                });
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'it-IT';
+                const safety = setTimeout(resolve, 2000);
+                utterance.onend = () => { clearTimeout(safety); resolve(); };
+                utterance.onerror = () => { clearTimeout(safety); resolve(); }; 
+                window.speechSynthesis.speak(utterance);
             });
         }
 
@@ -273,33 +267,25 @@
                 <div class="brass-button"></div>
             `;
 
-            anchor.addEventListener('click', async (e) => {
+            anchor.addEventListener('click', async () => {
                 initAudio();
-                
-                // 1. Dlin Dlon
                 statusMsg.innerText = "Suonando...";
                 statusMsg.style.opacity = '1';
                 playBellSound(659.25, 0, 1.2); 
                 playBellSound(523.25, 0.4, 1.2);
                 
-                // 2. Prima frase
                 await wait(1500);
                 statusMsg.innerText = "Sì?";
                 await playVoice("siii, desideraaaa?");
                 
-                // 3. Pausa
                 await wait(1000);
-                
-                // 4. Seconda frase
                 statusMsg.innerText = "Le apro...";
                 await playVoice("le apro subitooo");
                 
-                // 5. Bzzzz (Apriporta)
                 await wait(300);
                 statusMsg.innerText = "Entrate pure";
                 playBuzzer(1.8);
                 
-                // 6. Fine sequenza e reindirizzamento
                 await wait(2000);
                 statusMsg.style.opacity = '0';
                 
